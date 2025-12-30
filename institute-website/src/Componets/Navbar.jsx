@@ -11,6 +11,7 @@ function Navbar() {
     { name: 'Programs', href: '/courses' },
     { name: 'Admission', href: '/admission' },
     { name: 'Contact', href: '/contact' },
+    { name: 'Verify Certificate', href: '/verify-certificate' },
   ];
 
   return (
