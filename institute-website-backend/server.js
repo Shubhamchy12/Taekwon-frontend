@@ -13,6 +13,10 @@ const contactRoutes = require('./routes/contact');
 const adminRoutes = require('./routes/admin');
 const studentRoutes = require('./routes/students');
 const courseRoutes = require('./routes/courses');
+const certificateRoutes = require('./routes/certificates');
+const achievementRoutes = require('./routes/achievements');
+const badgeRoutes = require('./routes/badges');
+const certificateTemplateRoutes = require('./routes/certificate-templates');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -66,6 +70,10 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api/certificates', certificateRoutes);
+app.use('/api/achievements', achievementRoutes);
+app.use('/api/badges', badgeRoutes);
+app.use('/api/certificate-templates', certificateTemplateRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

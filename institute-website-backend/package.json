@@ -7,7 +7,9 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "seed": "node scripts/seedData.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": ["taekwondo", "institute", "api", "backend"],
   "author": "",
@@ -25,9 +27,15 @@
     "mongoose": "^8.9.3",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.9.18"
+    "nodemailer": "^6.9.18",
+    "pdfkit": "^0.15.0",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "jest": "^29.7.0",
+    "fast-check": "^3.15.1",
+    "supertest": "^6.3.4",
+    "mongodb-memory-server": "^9.1.6"
   }
 }
