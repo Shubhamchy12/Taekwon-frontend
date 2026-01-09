@@ -234,3 +234,45 @@ a:focus {
     display: none !important;
   }
 }
+
+/* Enhanced image clarity and sharpness */
+.hero-background {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  filter: contrast(1.1) brightness(1.05) saturate(1.1);
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* High DPI display optimization */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .hero-background {
+    image-rendering: -webkit-optimize-contrast;
+    filter: contrast(1.15) brightness(1.1) saturate(1.15) sharpen(1px);
+  }
+}
+
+/* Background image optimization */
+.bg-crisp {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Navbar animations */
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.3s ease-out;
+}

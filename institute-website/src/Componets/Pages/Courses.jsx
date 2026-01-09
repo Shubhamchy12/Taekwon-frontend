@@ -1,4 +1,22 @@
 import { Link } from 'react-router-dom';
+import img1 from '../../assets/img1.jpg';
+import { 
+  FaFistRaised, 
+  FaTrophy, 
+  FaBullseye, 
+  FaBolt, 
+  FaShieldAlt, 
+  FaUsers, 
+  FaClock, 
+  FaCalendarAlt, 
+  FaRupeeSign, 
+  FaCheckCircle, 
+  FaMedal, 
+  FaGraduationCap,
+  FaFire,
+  FaStar,
+  FaHeart
+} from 'react-icons/fa';
 
 function Courses() {
   const programs = [
@@ -110,15 +128,30 @@ function Courses() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-white" style={{ perspective: '1000px' }}>
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-red-50 to-yellow-50 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl font-bold text-gray-800 mb-6">Training Programs</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Discover our comprehensive Taekwon-Do programs designed for every age and skill level. 
-            From beginners to black belts, we have the perfect program for your martial arts journey.
-          </p>
+      <section 
+        className="relative py-20 min-h-[60vh] flex items-center justify-center transform-gpu"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${img1})`,
+          backgroundPosition: 'center',
+          backgroundSize: 'cover',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'scroll',
+          transform: 'rotateX(2deg)',
+          transformStyle: 'preserve-3d'
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 animate-fade-in-up">
+          <div className="transform hover:scale-105 transition-all duration-500">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+              Training <span className="text-red-400">Programs</span>
+            </h1>
+            <p className="text-lg md:text-xl text-white max-w-3xl mx-auto">
+              Discover our comprehensive Taekwon-Do programs designed for every age and skill level. 
+              From beginners to black belts, we have the perfect program for your martial arts journey.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -127,41 +160,69 @@ function Courses() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {programs.map((program, index) => (
-              <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                <div className={`h-2 bg-gradient-to-r ${program.color}`}></div>
-                <div className="p-8">
+              <div 
+                key={index} 
+                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-500 transform hover:scale-105 hover:rotate-1 group"
+                style={{
+                  transform: `rotateX(${5 + index * 2}deg) rotateY(${2 + index}deg)`,
+                  transformStyle: 'preserve-3d',
+                  animation: `float-${index % 3} 3s ease-in-out infinite`
+                }}
+              >
+                <div className={`h-2 bg-gradient-to-r ${program.color} group-hover:h-4 transition-all duration-300`}></div>
+                <div className="p-8 transform group-hover:translate-z-4">
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-2xl font-bold text-gray-800">{program.title}</h3>
-                    <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center mr-3 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
+                        {index === 0 && <FaUsers className="w-6 h-6 text-white" />}
+                        {index === 1 && <FaGraduationCap className="w-6 h-6 text-white" />}
+                        {index === 2 && <FaFire className="w-6 h-6 text-white" />}
+                        {index === 3 && <FaFistRaised className="w-6 h-6 text-white" />}
+                        {index === 4 && <FaTrophy className="w-6 h-6 text-white" />}
+                        {index === 5 && <FaShieldAlt className="w-6 h-6 text-white" />}
+                      </div>
+                      <h3 className="text-3xl font-bold text-black">{program.title}</h3>
+                    </div>
+                    <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold transform group-hover:scale-110 transition-transform duration-300">
                       {program.ageGroup}
                     </span>
                   </div>
                   
-                  <p className="text-gray-600 mb-6">{program.description}</p>
+                  <p className="text-base text-gray-700 mb-6">{program.description}</p>
                   
                   <div className="space-y-3 mb-6">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Duration:</span>
-                      <span className="font-semibold">{program.duration}</span>
+                    <div className="flex justify-between items-center group/item hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200">
+                      <div className="flex items-center">
+                        <FaClock className="text-amber-500 mr-2 group-hover/item:animate-spin" />
+                        <span className="text-base text-gray-700">Duration:</span>
+                      </div>
+                      <span className="font-semibold text-black">{program.duration}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Schedule:</span>
-                      <span className="font-semibold text-sm">{program.schedule}</span>
+                    <div className="flex justify-between items-center group/item hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200">
+                      <div className="flex items-center">
+                        <FaCalendarAlt className="text-amber-500 mr-2 group-hover/item:animate-pulse" />
+                        <span className="text-base text-gray-700">Schedule:</span>
+                      </div>
+                      <span className="font-semibold text-black text-sm">{program.schedule}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Price:</span>
+                    <div className="flex justify-between items-center group/item hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200">
+                      <div className="flex items-center">
+                        <FaRupeeSign className="text-amber-500 mr-2 group-hover/item:animate-bounce" />
+                        <span className="text-base text-gray-700">Price:</span>
+                      </div>
                       <span className="font-bold text-red-600">{program.price}</span>
                     </div>
                   </div>
                   
                   <div className="mb-6">
-                    <h4 className="font-semibold text-gray-800 mb-3">What You'll Learn:</h4>
+                    <h4 className="font-semibold text-black mb-3 flex items-center">
+                      <FaStar className="text-yellow-500 mr-2" />
+                      What You'll Learn:
+                    </h4>
                     <ul className="space-y-2">
                       {program.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-center text-sm text-gray-600">
-                          <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
+                        <li key={idx} className="flex items-center text-sm text-gray-700 group/feature hover:text-black transition-colors duration-200">
+                          <FaCheckCircle className="w-4 h-4 text-green-500 mr-2 group-hover/feature:animate-pulse" />
                           {feature}
                         </li>
                       ))}
@@ -170,9 +231,16 @@ function Courses() {
                   
                   <Link
                     to="/admission"
-                    className="block w-full text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-lg font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-200"
+                    className="block w-full text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-lg font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-500 transform hover:scale-105 hover:rotate-1 shadow-lg group-hover:shadow-xl"
+                    style={{
+                      transform: 'rotateX(5deg)',
+                      transformStyle: 'preserve-3d'
+                    }}
                   >
-                    Enroll Now
+                    <span className="flex items-center justify-center">
+                      <FaBolt className="mr-2 group-hover:animate-bounce" />
+                      Enroll Now
+                    </span>
                   </Link>
                 </div>
               </div>
@@ -182,18 +250,29 @@ function Courses() {
       </section>
 
       {/* Belt System */}
-      <section className="py-20 bg-gradient-to-r from-yellow-50 to-red-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-800 mb-4">ITF Belt System</h2>
-            <p className="text-xl text-gray-600">Progress through the traditional ranking system</p>
+      <section className="py-12 bg-gradient-to-r from-yellow-50 to-red-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 transform hover:scale-105 transition-all duration-500">
+            <h2 className="text-2xl font-bold text-black mb-3 flex items-center justify-center">
+              <FaMedal className="text-yellow-500 mr-2 animate-pulse" />
+              ITF Belt <span className="text-red-600 ml-2">System</span>
+            </h2>
+            <p className="text-sm text-gray-700">Progress through the traditional ranking system</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {belts.map((belt, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
-                <div className="flex items-center mb-4">
-                  <div className={`w-8 h-8 rounded-full mr-3 ${
+              <div 
+                key={index} 
+                className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-all duration-500 transform hover:scale-105 hover:rotate-1 group"
+                style={{
+                  transform: `rotateX(${3 + index}deg) rotateY(${1 + index}deg)`,
+                  transformStyle: 'preserve-3d',
+                  animation: `float-${index % 3} 4s ease-in-out infinite`
+                }}
+              >
+                <div className="flex items-center mb-3">
+                  <div className={`w-6 h-6 rounded-full mr-2 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 ${
                     belt.name.includes('White') ? 'bg-gray-200 border-2 border-gray-400' :
                     belt.name.includes('Yellow') ? 'bg-yellow-400' :
                     belt.name.includes('Green') ? 'bg-green-500' :
@@ -201,10 +280,13 @@ function Courses() {
                     belt.name.includes('Red') ? 'bg-red-600' :
                     'bg-black'
                   }`}></div>
-                  <h3 className="text-lg font-bold text-gray-800">{belt.name}</h3>
+                  <h3 className="text-lg font-bold text-black group-hover:text-red-600 transition-colors duration-300">{belt.name}</h3>
                 </div>
-                <p className="text-gray-600 text-sm mb-3">{belt.requirements}</p>
-                <p className="text-red-600 font-semibold text-sm">Typical Duration: {belt.duration}</p>
+                <p className="text-sm text-gray-700 mb-2 group-hover:text-black transition-colors duration-300">{belt.requirements}</p>
+                <div className="flex items-center">
+                  <FaClock className="text-amber-500 mr-1 group-hover:animate-spin text-sm" />
+                  <p className="text-red-600 font-semibold text-xs">Duration: {belt.duration}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -212,71 +294,186 @@ function Courses() {
       </section>
 
       {/* Training Schedule */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-800 mb-4">Weekly Schedule</h2>
-            <p className="text-xl text-gray-600">Find the perfect time for your training</p>
+      <section className="py-12 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 transform hover:scale-105 transition-all duration-500">
+            <h2 className="text-2xl font-bold text-black mb-3 flex items-center justify-center">
+              <FaCalendarAlt className="text-red-600 mr-2 animate-bounce" />
+              Weekly <span className="text-yellow-600 ml-2">Schedule</span>
+            </h2>
+            <p className="text-sm text-gray-700">Find the perfect time for your training</p>
           </div>
           
-          <div className="bg-gradient-to-br from-yellow-50 to-red-50 rounded-xl p-8 overflow-x-auto">
+          <div className="bg-gray-100 rounded-xl p-6 overflow-x-auto transform hover:scale-105 hover:rotate-1 transition-all duration-500 shadow-lg"
+               style={{
+                 transform: 'rotateX(5deg)',
+                 transformStyle: 'preserve-3d'
+               }}>
             <table className="w-full min-w-full">
               <thead>
-                <tr className="border-b-2 border-red-200">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Time</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Monday</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Tuesday</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Wednesday</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Thursday</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Friday</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Saturday</th>
+                <tr className="border-b-2 border-gray-300">
+                  <th className="text-left py-2 px-3 font-semibold text-black flex items-center text-sm">
+                    <FaClock className="text-amber-500 mr-1" />
+                    Time
+                  </th>
+                  <th className="text-left py-2 px-3 font-semibold text-black text-sm">Monday</th>
+                  <th className="text-left py-2 px-3 font-semibold text-black text-sm">Tuesday</th>
+                  <th className="text-left py-2 px-3 font-semibold text-black text-sm">Wednesday</th>
+                  <th className="text-left py-2 px-3 font-semibold text-black text-sm">Thursday</th>
+                  <th className="text-left py-2 px-3 font-semibold text-black text-sm">Friday</th>
+                  <th className="text-left py-2 px-3 font-semibold text-black text-sm">Saturday</th>
                 </tr>
               </thead>
-              <tbody className="text-sm">
-                <tr className="border-b border-red-100">
-                  <td className="py-3 px-4 font-semibold">9:00 AM</td>
-                  <td className="py-3 px-4">-</td>
-                  <td className="py-3 px-4 bg-pink-100 rounded">Women's Self-Defense</td>
-                  <td className="py-3 px-4">-</td>
-                  <td className="py-3 px-4 bg-pink-100 rounded">Women's Self-Defense</td>
-                  <td className="py-3 px-4">-</td>
-                  <td className="py-3 px-4 bg-purple-100 rounded">Competition Team</td>
+              <tbody className="text-xs">
+                <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-200">
+                  <td className="py-2 px-3 font-semibold text-black">9:00 AM</td>
+                  <td className="py-2 px-3">-</td>
+                  <td className="py-2 px-3 bg-pink-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaShieldAlt className="text-pink-600 mr-1 text-xs" />
+                      <span className="text-xs">Women's Self-Defense</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3">-</td>
+                  <td className="py-2 px-3 bg-pink-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaShieldAlt className="text-pink-600 mr-1 text-xs" />
+                      <span className="text-xs">Women's Self-Defense</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3">-</td>
+                  <td className="py-2 px-3 bg-purple-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaTrophy className="text-purple-600 mr-1 text-xs" />
+                      <span className="text-xs">Competition Team</span>
+                    </div>
+                  </td>
                 </tr>
-                <tr className="border-b border-red-100">
-                  <td className="py-3 px-4 font-semibold">4:00 PM</td>
-                  <td className="py-3 px-4 bg-yellow-100 rounded">Little Warriors</td>
-                  <td className="py-3 px-4">-</td>
-                  <td className="py-3 px-4 bg-yellow-100 rounded">Little Warriors</td>
-                  <td className="py-3 px-4">-</td>
-                  <td className="py-3 px-4 bg-yellow-100 rounded">Little Warriors</td>
-                  <td className="py-3 px-4">-</td>
+                <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-200">
+                  <td className="py-2 px-3 font-semibold text-black">4:00 PM</td>
+                  <td className="py-2 px-3 bg-yellow-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaUsers className="text-yellow-600 mr-1 text-xs" />
+                      <span className="text-xs">Little Warriors</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3">-</td>
+                  <td className="py-2 px-3 bg-yellow-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaUsers className="text-yellow-600 mr-1 text-xs" />
+                      <span className="text-xs">Little Warriors</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3">-</td>
+                  <td className="py-2 px-3 bg-yellow-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaUsers className="text-yellow-600 mr-1 text-xs" />
+                      <span className="text-xs">Little Warriors</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3">-</td>
                 </tr>
-                <tr className="border-b border-red-100">
-                  <td className="py-3 px-4 font-semibold">5:00 PM</td>
-                  <td className="py-3 px-4">-</td>
-                  <td className="py-3 px-4 bg-blue-100 rounded">Junior Program</td>
-                  <td className="py-3 px-4">-</td>
-                  <td className="py-3 px-4 bg-blue-100 rounded">Junior Program</td>
-                  <td className="py-3 px-4">-</td>
-                  <td className="py-3 px-4 bg-blue-100 rounded">Junior Program</td>
+                <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-200">
+                  <td className="py-2 px-3 font-semibold text-black">5:00 PM</td>
+                  <td className="py-2 px-3">-</td>
+                  <td className="py-2 px-3 bg-blue-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaGraduationCap className="text-blue-600 mr-1 text-xs" />
+                      <span className="text-xs">Junior Program</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3">-</td>
+                  <td className="py-2 px-3 bg-blue-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaGraduationCap className="text-blue-600 mr-1 text-xs" />
+                      <span className="text-xs">Junior Program</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3">-</td>
+                  <td className="py-2 px-3 bg-blue-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaGraduationCap className="text-blue-600 mr-1 text-xs" />
+                      <span className="text-xs">Junior Program</span>
+                    </div>
+                  </td>
                 </tr>
-                <tr className="border-b border-red-100">
-                  <td className="py-3 px-4 font-semibold">6:00 PM</td>
-                  <td className="py-3 px-4 bg-green-100 rounded">Teen Program</td>
-                  <td className="py-3 px-4 bg-green-100 rounded">Teen Program</td>
-                  <td className="py-3 px-4 bg-green-100 rounded">Teen Program</td>
-                  <td className="py-3 px-4 bg-green-100 rounded">Teen Program</td>
-                  <td className="py-3 px-4 bg-green-100 rounded">Teen Program</td>
-                  <td className="py-3 px-4 bg-green-100 rounded">Teen Program</td>
+                <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-200">
+                  <td className="py-2 px-3 font-semibold text-black">6:00 PM</td>
+                  <td className="py-2 px-3 bg-green-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaFire className="text-green-600 mr-1 text-xs" />
+                      <span className="text-xs">Teen Program</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3 bg-green-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaFire className="text-green-600 mr-1 text-xs" />
+                      <span className="text-xs">Teen Program</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3 bg-green-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaFire className="text-green-600 mr-1 text-xs" />
+                      <span className="text-xs">Teen Program</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3 bg-green-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaFire className="text-green-600 mr-1 text-xs" />
+                      <span className="text-xs">Teen Program</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3 bg-green-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaFire className="text-green-600 mr-1 text-xs" />
+                      <span className="text-xs">Teen Program</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3 bg-green-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaFire className="text-green-600 mr-1 text-xs" />
+                      <span className="text-xs">Teen Program</span>
+                    </div>
+                  </td>
                 </tr>
-                <tr>
-                  <td className="py-3 px-4 font-semibold">7:30 PM</td>
-                  <td className="py-3 px-4 bg-red-100 rounded">Adult Program</td>
-                  <td className="py-3 px-4 bg-red-100 rounded">Adult Program</td>
-                  <td className="py-3 px-4 bg-red-100 rounded">Adult Program</td>
-                  <td className="py-3 px-4 bg-red-100 rounded">Adult Program</td>
-                  <td className="py-3 px-4 bg-red-100 rounded">Adult Program</td>
-                  <td className="py-3 px-4 bg-red-100 rounded">Adult Program</td>
+                <tr className="hover:bg-gray-50 transition-colors duration-200">
+                  <td className="py-2 px-3 font-semibold text-black">7:30 PM</td>
+                  <td className="py-2 px-3 bg-red-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaFistRaised className="text-red-600 mr-1 text-xs" />
+                      <span className="text-xs">Adult Program</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3 bg-red-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaFistRaised className="text-red-600 mr-1 text-xs" />
+                      <span className="text-xs">Adult Program</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3 bg-red-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaFistRaised className="text-red-600 mr-1 text-xs" />
+                      <span className="text-xs">Adult Program</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3 bg-red-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaFistRaised className="text-red-600 mr-1 text-xs" />
+                      <span className="text-xs">Adult Program</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3 bg-red-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaFistRaised className="text-red-600 mr-1 text-xs" />
+                      <span className="text-xs">Adult Program</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3 bg-red-100 rounded transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center">
+                      <FaFistRaised className="text-red-600 mr-1 text-xs" />
+                      <span className="text-xs">Adult Program</span>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -285,25 +482,44 @@ function Courses() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-red-500 to-red-600">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-white mb-6">Ready to Start Your Training?</h2>
-          <p className="text-xl text-red-100 mb-8">
-            Choose the program that's right for you and begin your martial arts journey today.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/admission"
-              className="bg-white text-red-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors duration-200"
-            >
-              Enroll Now
-            </Link>
-            <Link
-              to="/contact"
-              className="border-2 border-white text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white hover:text-red-600 transition-all duration-200"
-            >
-              Schedule a Visit
-            </Link>
+      <section className="py-12 bg-gray-100">
+        <div className="max-w-3xl mx-auto text-center px-4 sm:px-6 lg:px-8 transform hover:scale-105 transition-all duration-500">
+          <div className="bg-white rounded-2xl p-8 shadow-lg"
+               style={{
+                 transform: 'rotateX(5deg)',
+                 transformStyle: 'preserve-3d'
+               }}>
+            <div className="flex items-center justify-center mb-4">
+              <FaHeart className="text-red-600 text-2xl mr-2 animate-pulse" />
+              <h2 className="text-2xl font-bold text-black">Ready to Start Your Training?</h2>
+            </div>
+            <p className="text-sm text-gray-700 mb-6">
+              Choose the program that's right for you and begin your martial arts journey today.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                to="/admission"
+                className="bg-red-600 text-white px-6 py-3 rounded-lg text-base font-semibold hover:bg-red-700 transition-all duration-300 transform hover:scale-105 hover:rotate-1 shadow-lg flex items-center justify-center"
+                style={{
+                  transform: 'rotateX(5deg)',
+                  transformStyle: 'preserve-3d'
+                }}
+              >
+                <FaBolt className="mr-2 animate-bounce" />
+                Enroll Now
+              </Link>
+              <Link
+                to="/contact"
+                className="border-2 border-gray-400 text-black px-6 py-3 rounded-lg text-base font-semibold hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 hover:-rotate-1 shadow-lg flex items-center justify-center"
+                style={{
+                  transform: 'rotateX(-5deg)',
+                  transformStyle: 'preserve-3d'
+                }}
+              >
+                <FaCalendarAlt className="mr-2 animate-pulse" />
+                Schedule a Visit
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -312,3 +528,34 @@ function Courses() {
 }
 
 export default Courses;
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes float-0 {
+    0%, 100% { transform: translateY(0px) rotateX(5deg) rotateY(2deg); }
+    50% { transform: translateY(-10px) rotateX(7deg) rotateY(4deg); }
+  }
+  @keyframes float-1 {
+    0%, 100% { transform: translateY(0px) rotateX(7deg) rotateY(4deg); }
+    50% { transform: translateY(-15px) rotateX(9deg) rotateY(6deg); }
+  }
+  @keyframes float-2 {
+    0%, 100% { transform: translateY(0px) rotateX(9deg) rotateY(6deg); }
+    50% { transform: translateY(-8px) rotateX(11deg) rotateY(8deg); }
+  }
+  @keyframes animate-fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-fade-in-up {
+    animation: animate-fade-in-up 1s ease-out;
+  }
+`;
+document.head.appendChild(style);

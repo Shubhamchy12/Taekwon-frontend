@@ -1,20 +1,56 @@
+import image from '../../assets/image.png';
+import { 
+  FaUser, 
+  FaCalendarAlt, 
+  FaPhone, 
+  FaEnvelope, 
+  FaMapMarkerAlt, 
+  FaGraduationCap, 
+  FaClock, 
+  FaHeartbeat, 
+  FaCheckCircle, 
+  FaPaperPlane,
+  FaBolt,
+  FaShieldAlt,
+  FaUsers,
+  FaStar
+} from 'react-icons/fa';
+
 function Admission() {
   return (
-    <div>
+    <div style={{ perspective: '1000px' }}>
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-slate-900 to-slate-800 text-white py-24">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center bg-green-500/20 border border-green-500/30 text-green-400 px-6 py-3 rounded-full text-sm font-semibold mb-8">
+      <section 
+        className="relative py-24 min-h-[60vh] flex items-center justify-center transform-gpu"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url(${image})`,
+          backgroundPosition: 'center',
+          backgroundSize: 'cover',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'scroll',
+          transform: 'rotateX(2deg)',
+          transformStyle: 'preserve-3d'
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-6 text-center relative z-10 animate-fade-in-up">
+          <div className="inline-flex items-center bg-black border border-gray-600 text-white px-6 py-3 rounded-full text-sm font-semibold mb-8 transform hover:scale-105 hover:rotate-1 transition-all duration-500"
+               style={{
+                 transform: 'rotateX(5deg)',
+                 transformStyle: 'preserve-3d'
+               }}>
             <span className="w-2 h-2 bg-green-400 rounded-full mr-3 animate-pulse"></span>
+            <FaStar className="mr-2 animate-spin" />
             Admissions Now Open - Limited Seats Available
           </div>
-          <h1 className="text-5xl md:text-6xl font-black mb-6">
-            Join <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">Combat Warrior</span>
-          </h1>
-          <p className="text-xl text-slate-300 max-w-4xl mx-auto leading-relaxed">
-            Begin your martial arts journey with Karnataka's premier Taekwon-do academy. 
-            Complete the application below to secure your spot.
-          </p>
+          <div className="transform hover:scale-105 transition-all duration-500">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+              Join <span className="text-red-400">Combat</span> <span className="text-yellow-400">Warrior</span>
+            </h1>
+            <p className="text-lg md:text-xl text-white max-w-4xl mx-auto leading-relaxed">
+              Begin your martial arts journey with Karnataka's premier Taekwon-do academy. 
+              Complete the application below to secure your spot.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -23,7 +59,10 @@ function Admission() {
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
             {/* Form Header */}
             <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-8 text-white text-center">
-              <h2 className="text-3xl font-bold mb-2">Student Admission Application</h2>
+              <div className="flex items-center justify-center mb-2">
+                <FaGraduationCap className="text-4xl mr-3" />
+                <h2 className="text-3xl font-bold text-white">Student Admission Application</h2>
+              </div>
               <p className="text-slate-300">All fields marked with * are required</p>
             </div>
 
@@ -32,14 +71,15 @@ function Admission() {
               <div>
                 <div className="flex items-center mb-6">
                   <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mr-4">
-                    <span className="text-white font-bold text-sm">1</span>
+                    <FaUser className="text-white text-sm" />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-800">Personal Information</h3>
+                  <h3 className="text-3xl font-bold text-black">Personal Information</h3>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-3">
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaUser className="text-amber-500 mr-2" />
                       Full Name *
                     </label>
                     <input
@@ -49,7 +89,8 @@ function Admission() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-3">
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaCalendarAlt className="text-amber-500 mr-2" />
                       Date of Birth *
                     </label>
                     <input
@@ -58,7 +99,8 @@ function Admission() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-3">
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaUsers className="text-amber-500 mr-2" />
                       Gender *
                     </label>
                     <select className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
@@ -69,7 +111,8 @@ function Admission() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-3">
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaPhone className="text-amber-500 mr-2" />
                       Phone Number *
                     </label>
                     <input
@@ -85,14 +128,15 @@ function Admission() {
               <div>
                 <div className="flex items-center mb-6">
                   <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mr-4">
-                    <span className="text-white font-bold text-sm">2</span>
+                    <FaEnvelope className="text-white text-sm" />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-800">Contact Information</h3>
+                  <h3 className="text-3xl font-bold text-black">Contact Information</h3>
                 </div>
                 
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-3">
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaEnvelope className="text-amber-500 mr-2" />
                       Email Address *
                     </label>
                     <input
@@ -102,7 +146,8 @@ function Admission() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-3">
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaMapMarkerAlt className="text-amber-500 mr-2" />
                       Complete Address *
                     </label>
                     <textarea
@@ -118,14 +163,15 @@ function Admission() {
               <div>
                 <div className="flex items-center mb-6">
                   <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mr-4">
-                    <span className="text-white font-bold text-sm">3</span>
+                    <FaGraduationCap className="text-white text-sm" />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-800">Course Selection</h3>
+                  <h3 className="text-3xl font-bold text-black">Course Selection</h3>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-3">
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaShieldAlt className="text-amber-500 mr-2" />
                       Training Level *
                     </label>
                     <select className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
@@ -136,7 +182,8 @@ function Admission() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-3">
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaClock className="text-amber-500 mr-2" />
                       Preferred Schedule
                     </label>
                     <select className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
@@ -153,14 +200,15 @@ function Admission() {
               <div>
                 <div className="flex items-center mb-6">
                   <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mr-4">
-                    <span className="text-white font-bold text-sm">4</span>
+                    <FaPhone className="text-white text-sm" />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-800">Emergency Contact</h3>
+                  <h3 className="text-3xl font-bold text-black">Emergency Contact</h3>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-3">
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaUser className="text-amber-500 mr-2" />
                       Emergency Contact Name *
                     </label>
                     <input
@@ -170,7 +218,8 @@ function Admission() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-3">
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaPhone className="text-amber-500 mr-2" />
                       Emergency Contact Phone *
                     </label>
                     <input
@@ -180,7 +229,8 @@ function Admission() {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-bold text-slate-700 mb-3">
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaUsers className="text-amber-500 mr-2" />
                       Relationship to Student *
                     </label>
                     <select className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
@@ -199,13 +249,14 @@ function Admission() {
               <div>
                 <div className="flex items-center mb-6">
                   <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mr-4">
-                    <span className="text-white font-bold text-sm">5</span>
+                    <FaHeartbeat className="text-white text-sm" />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-800">Medical Information</h3>
+                  <h3 className="text-3xl font-bold text-black">Medical Information</h3>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3">
+                  <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                    <FaHeartbeat className="text-amber-500 mr-2" />
                     Any Medical Conditions or Injuries (Optional)
                   </label>
                   <textarea
@@ -223,7 +274,8 @@ function Admission() {
                     type="checkbox"
                     className="w-5 h-5 text-amber-500 border-2 border-slate-300 rounded focus:ring-amber-500 mt-1"
                   />
-                  <label className="text-sm text-slate-600 leading-relaxed">
+                  <label className="text-sm text-slate-600 leading-relaxed flex items-start">
+                    <FaCheckCircle className="text-green-500 mr-2 mt-1 flex-shrink-0" />
                     I agree to the terms and conditions, understand the training requirements, 
                     and acknowledge that martial arts training involves physical activity and inherent risks. 
                     I consent to emergency medical treatment if necessary.
@@ -233,11 +285,16 @@ function Admission() {
                 <div className="text-center">
                   <button
                     type="submit"
-                    className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-12 py-4 rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transform hover:scale-105 transition-all duration-300 shadow-2xl"
+                    className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-12 py-4 rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transition-all duration-300 shadow-lg"
                   >
-                    Submit Application
+                    <span className="flex items-center justify-center">
+                      <FaPaperPlane className="mr-2" />
+                      <FaBolt className="mr-2" />
+                      Submit Application
+                    </span>
                   </button>
-                  <p className="text-sm text-slate-500 mt-4">
+                  <p className="text-sm text-slate-500 mt-4 flex items-center justify-center">
+                    <FaClock className="mr-2 text-amber-500" />
                     We'll contact you within 24 hours to confirm your application
                   </p>
                 </div>
@@ -251,3 +308,22 @@ function Admission() {
 }
 
 export default Admission;
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes animate-fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-fade-in-up {
+    animation: animate-fade-in-up 1s ease-out;
+  }
+`;
+document.head.appendChild(style);
