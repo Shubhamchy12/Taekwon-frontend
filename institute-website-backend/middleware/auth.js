@@ -125,5 +125,6 @@ module.exports = {
   protect,
   restrictTo,
   adminOnly,
-  staffOnly
+  staffOnly,
+  authorize: restrictTo // Add alias for backward compatibility
 };
