@@ -202,7 +202,7 @@ function Admission() {
     <div style={{ perspective: '1000px' }}>
       {/* Hero Section */}
       <section 
-        className="relative py-24 min-h-[60vh] flex items-center justify-center transform-gpu"
+        className="hero-section mobile-hero-fix relative py-20 sm:py-24 min-h-[60vh] flex items-center justify-center transform-gpu"
         style={{
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url(${image})`,
           backgroundPosition: 'center',
@@ -213,21 +213,21 @@ function Admission() {
           transformStyle: 'preserve-3d'
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 text-center relative z-10 animate-fade-in-up">
-          <div className="inline-flex items-center bg-black border border-gray-600 text-white px-6 py-3 rounded-full text-sm font-semibold mb-8 transform hover:scale-105 hover:rotate-1 transition-all duration-500"
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center relative z-10 animate-fade-in-up">
+          <div className="inline-flex items-center bg-black border border-gray-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full text-xs sm:text-sm font-semibold mb-6 sm:mb-8 transform hover:scale-105 hover:rotate-1 transition-all duration-500"
                style={{
                  transform: 'rotateX(5deg)',
                  transformStyle: 'preserve-3d'
                }}>
-            <span className="w-2 h-2 bg-green-400 rounded-full mr-3 animate-pulse"></span>
-            <FaStar className="mr-2 animate-spin" />
+            <span className="w-2 h-2 bg-green-400 rounded-full mr-2 sm:mr-3 animate-pulse"></span>
+            <FaStar className="mr-1 sm:mr-2 animate-spin" />
             Admissions Now Open - Limited Seats Available
           </div>
           <div className="transform hover:scale-105 transition-all duration-500">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-white">
               Join <span className="text-white">Combat</span> <span className="text-white">Warrior</span>
             </h1>
-            <p className="text-lg md:text-xl text-white max-w-4xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-white max-w-4xl mx-auto leading-relaxed">
               Begin your martial arts journey with Karnataka's premier Taekwon-do academy. 
               Complete the application below to secure your spot.
             </p>
@@ -775,11 +775,16 @@ function Admission() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`px-12 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg transform hover:scale-105 ${
+                    className={`px-12 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg touch-manipulation cursor-pointer relative z-10 active:scale-95 ${
                       isSubmitting 
                         ? 'bg-gray-400 cursor-not-allowed' 
                         : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 hover:shadow-xl'
                     }`}
+                    style={{
+                      minHeight: '56px',
+                      touchAction: 'manipulation',
+                      WebkitTapHighlightColor: 'transparent'
+                    }}
                   >
                     <span className="flex items-center justify-center">
                       {isSubmitting ? (

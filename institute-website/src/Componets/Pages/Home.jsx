@@ -159,19 +159,20 @@ function Home() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white overflow-hidden">
       {/* Enhanced Hero Section with Slider */}
       <section 
-        className="hero-background relative min-h-screen flex items-center bg-cover bg-center bg-no-repeat"
+        className="hero-background mobile-hero-fix relative min-h-screen flex items-center bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4)), url(${image3})`,
           backgroundPosition: 'center center',
           backgroundSize: 'cover',
-          backgroundAttachment: 'fixed'
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: window.innerWidth <= 768 ? 'scroll' : 'scroll'
         }}
       >
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full h-full">
-          <div className="flex justify-start items-start min-h-screen pt-20">
-            <div className="text-white text-left max-w-lg">
+          <div className="flex justify-start items-center min-h-screen pt-16 sm:pt-20">
+            <div className="text-white text-left max-w-lg hero-content">
               
-              <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
                 {heroSlides[currentSlide].title.split(' ').map((word, index) => (
                   <span
                     key={index}
@@ -183,41 +184,43 @@ function Home() {
                 ))}
               </h1>
               
-              <p className="text-lg mb-4 font-bold text-yellow-300 tracking-wide">
+              <p className="text-base sm:text-lg mb-3 sm:mb-4 font-bold text-yellow-300 tracking-wide">
                 {heroSlides[currentSlide].subtitle}
               </p>
               
-              <p className="text-base mb-8 leading-relaxed text-gray-100">
+              <p className="text-sm sm:text-base mb-6 sm:mb-8 leading-relaxed text-gray-100">
                 {heroSlides[currentSlide].description}
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-4 mb-8 justify-start">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 justify-start">
                 <Link
                   to="/admission"
-                  className="group bg-yellow-400 text-black px-6 py-3 rounded-full text-base font-bold hover:bg-yellow-300 hover:shadow-2xl transition-all duration-500 text-center transform hover:scale-110 hover:rotate-2 border-2 border-yellow-400"
+                  className="group bg-yellow-400 text-black px-4 sm:px-6 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold hover:bg-yellow-300 hover:shadow-2xl transition-all duration-300 text-center border-2 border-yellow-400 touch-manipulation cursor-pointer relative z-10 active:scale-95 active:bg-yellow-500"
                   style={{
-                    transform: 'rotateX(5deg)',
-                    transformStyle: 'preserve-3d'
+                    minHeight: '48px',
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent'
                   }}
                 >
                   <span className="flex items-center justify-center">
-                    <FaRocket className="mr-2 group-hover:animate-bounce" />
+                    <FaRocket className="mr-2" />
                     Begin Your Journey
-                    <svg className="ml-2 w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="ml-2 w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </span>
                 </Link>
                 <Link
                   to="/courses"
-                  className="border-2 border-red-500 text-red-500 bg-black bg-opacity-50 px-6 py-3 rounded-full text-base font-bold hover:bg-red-500 hover:text-white transition-all duration-500 text-center backdrop-blur-sm transform hover:scale-110 hover:-rotate-2"
+                  className="border-2 border-red-500 text-red-500 bg-black bg-opacity-50 px-4 sm:px-6 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold hover:bg-red-500 hover:text-white transition-all duration-300 text-center backdrop-blur-sm touch-manipulation cursor-pointer relative z-10 active:scale-95 active:bg-red-600 active:text-white"
                   style={{
-                    transform: 'rotateX(-5deg)',
-                    transformStyle: 'preserve-3d'
+                    minHeight: '48px',
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent'
                   }}
                 >
                   <span className="flex items-center justify-center">
-                    <FaDumbbell className="mr-2 group-hover:animate-pulse" />
+                    <FaDumbbell className="mr-2" />
                     Training Programs
                   </span>
                 </Link>
@@ -243,14 +246,23 @@ function Home() {
         </div>
 
         {/* Slide indicators */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20">
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
           {heroSlides.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentSlide ? 'bg-white scale-125' : 'bg-white bg-opacity-50'
+              className={`rounded-full transition-all duration-300 touch-manipulation ${
+                index === currentSlide ? 'bg-white opacity-100' : 'bg-white opacity-40'
               }`}
+              style={{
+                width: '12px',
+                height: '12px',
+                minHeight: '20px',
+                minWidth: '20px',
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent',
+                borderRadius: '50%'
+              }}
             />
           ))}
         </div>
@@ -449,7 +461,12 @@ function Home() {
                   
                   <Link
                     to="/admission"
-                    className={`inline-block w-full text-center bg-gradient-to-r from-yellow-400 to-red-500 text-black px-4 py-2 rounded-lg font-bold hover:shadow-lg transform hover:scale-105 transition-all duration-300 hover:from-yellow-300 hover:to-red-400 text-sm`}
+                    className="inline-block w-full text-center bg-gradient-to-r from-yellow-400 to-red-500 text-black px-4 py-3 rounded-lg font-bold hover:shadow-lg transition-all duration-300 hover:from-yellow-300 hover:to-red-400 text-sm touch-manipulation cursor-pointer relative z-10 active:scale-95 active:from-yellow-500 active:to-red-600"
+                    style={{
+                      minHeight: '44px',
+                      touchAction: 'manipulation',
+                      WebkitTapHighlightColor: 'transparent'
+                    }}
                   >
                     Join This Program
                   </Link>
@@ -574,30 +591,32 @@ function Home() {
           <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-center">
             <Link
               to="/admission"
-              className="group bg-yellow-600 text-white px-8 py-3 rounded-full text-base font-bold hover:bg-yellow-700 hover:shadow-2xl transition-all duration-500 transform hover:scale-110 hover:rotate-2 border-2 border-yellow-600"
+              className="group bg-yellow-600 text-white px-8 py-4 rounded-full text-base font-bold hover:bg-yellow-700 hover:shadow-2xl transition-all duration-300 border-2 border-yellow-600 touch-manipulation cursor-pointer relative z-10 active:scale-95 active:bg-yellow-800"
               style={{
-                transform: 'rotateX(5deg)',
-                transformStyle: 'preserve-3d'
+                minHeight: '52px',
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent'
               }}
             >
               <span className="flex items-center justify-center">
-                <FaFistRaised className="mr-2 group-hover:animate-bounce" />
+                <FaFistRaised className="mr-2" />
                 Start Training Today
-                <svg className="ml-2 w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="ml-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </span>
             </Link>
             <Link
               to="/contact"
-              className="border-2 border-red-500 text-red-500 bg-white px-8 py-3 rounded-full text-base font-bold hover:bg-red-500 hover:text-white transition-all duration-500 transform hover:scale-110 hover:-rotate-2"
+              className="border-2 border-red-500 text-red-500 bg-white px-8 py-4 rounded-full text-base font-bold hover:bg-red-500 hover:text-white transition-all duration-300 touch-manipulation cursor-pointer relative z-10 active:scale-95 active:bg-red-600 active:text-white"
               style={{
-                transform: 'rotateX(-5deg)',
-                transformStyle: 'preserve-3d'
+                minHeight: '52px',
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent'
               }}
             >
               <span className="flex items-center justify-center">
-                <FaGraduationCap className="mr-2 group-hover:animate-pulse" />
+                <FaGraduationCap className="mr-2" />
                 Visit Our Dojang
               </span>
             </Link>

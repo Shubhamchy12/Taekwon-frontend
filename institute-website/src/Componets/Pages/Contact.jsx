@@ -92,20 +92,20 @@ function Contact() {
     <div>
       {/* Hero Section */}
       <section 
-        className="relative py-24 min-h-[60vh] flex items-center justify-center"
+        className="hero-section mobile-hero-fix relative py-20 sm:py-24 min-h-[60vh] flex items-center justify-center"
         style={{
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url(${img})`,
-          backgroundPosition: 'center',
+          backgroundPosition: 'center center',
           backgroundSize: 'cover',
           backgroundRepeat: 'no-repeat',
           backgroundAttachment: 'scroll'
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center relative z-10">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-white">
             Get In <span className="text-white">Touch</span>
           </h1>
-          <p className="text-lg md:text-xl text-white max-w-4xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-white max-w-4xl mx-auto leading-relaxed">
             Ready to start your martial arts journey? Have questions about our programs? 
             We're here to help you every step of the way.
           </p>
@@ -279,11 +279,16 @@ function Contact() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className={`w-full py-3 rounded-lg font-bold text-base transform hover:scale-105 transition-all duration-300 shadow-lg ${
+                  className={`w-full py-4 rounded-lg font-bold text-base transition-all duration-300 shadow-lg touch-manipulation cursor-pointer relative z-10 active:scale-95 ${
                     isSubmitting 
                       ? 'bg-gray-400 cursor-not-allowed' 
                       : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700'
                   }`}
+                  style={{
+                    minHeight: '52px',
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent'
+                  }}
                 >
                   <span className="flex items-center justify-center">
                     {isSubmitting ? (

@@ -131,7 +131,7 @@ function Courses() {
     <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-white" style={{ perspective: '1000px' }}>
       {/* Hero Section */}
       <section 
-        className="relative py-20 min-h-[60vh] flex items-center justify-center transform-gpu"
+        className="hero-section mobile-hero-fix relative py-16 sm:py-20 min-h-[60vh] flex items-center justify-center transform-gpu"
         style={{
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${img1})`,
           backgroundPosition: 'center',
@@ -144,10 +144,10 @@ function Courses() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 animate-fade-in-up">
           <div className="transform hover:scale-105 transition-all duration-500">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-white">
               Training <span className="text-white">Programs</span>
             </h1>
-            <p className="text-lg md:text-xl text-white max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-white max-w-3xl mx-auto leading-relaxed">
               Discover our comprehensive Taekwon-Do programs designed for every age and skill level. 
               From beginners to black belts, we have the perfect program for your martial arts journey.
             </p>
