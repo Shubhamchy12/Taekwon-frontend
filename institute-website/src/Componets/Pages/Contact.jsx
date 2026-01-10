@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import img from '../../assets/img.jpg';
 import { 
   FaMapMarkerAlt, 
@@ -7,10 +8,86 @@ import {
   FaPaperPlane,
   FaUser,
   FaQuestionCircle,
-  FaCheckCircle
+  FaCheckCircle,
+  FaSpinner
 } from 'react-icons/fa';
 
 function Contact() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    inquiryType: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null);
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!formData.name || !formData.email || !formData.inquiryType || !formData.message) {
+      setSubmitStatus({
+        type: 'error',
+        message: 'Please fill in all required fields.'
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      // Create contact object
+      const newContact = {
+        _id: Date.now().toString(),
+        ...formData,
+        submittedAt: new Date().toISOString()
+      };
+      
+      // Get existing contacts from localStorage
+      const existingContacts = JSON.parse(localStorage.getItem('contacts') || '[]');
+      
+      // Add new contact to the beginning of the array
+      const updatedContacts = [newContact, ...existingContacts];
+      
+      // Save to localStorage
+      localStorage.setItem('contacts', JSON.stringify(updatedContacts));
+      
+      console.log('Contact added successfully:', newContact);
+
+      setSubmitStatus({
+        type: 'success',
+        message: 'Message sent successfully! We will get back to you within 24 hours.'
+      });
+      
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        inquiryType: '',
+        message: ''
+      });
+    } catch (error) {
+      console.error('Contact form submission error:', error);
+      setSubmitStatus({
+        type: 'error',
+        message: 'Error sending message. Please try again.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <div>
       {/* Hero Section */}
@@ -26,7 +103,7 @@ function Contact() {
       >
         <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
           <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-            Get In <span className="text-red-400">Touch</span>
+            Get In <span className="text-white">Touch</span>
           </h1>
           <p className="text-lg md:text-xl text-white max-w-4xl mx-auto leading-relaxed">
             Ready to start your martial arts journey? Have questions about our programs? 
@@ -35,64 +112,57 @@ function Contact() {
         </div>
       </section>
 
-      <div className="py-24 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+      <div className="py-16 bg-slate-50">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             {/* Contact Information */}
             <div>
-              <div className="bg-white rounded-3xl p-12 shadow-2xl transform hover:scale-105 hover:rotate-1 transition-all duration-500"
-                   style={{
-                     transform: 'rotateX(5deg) rotateY(5deg)',
-                     transformStyle: 'preserve-3d'
-                   }}>
-                <h2 className="text-3xl font-bold text-black mb-8">Contact Information</h2>
+              <div className="bg-white rounded-2xl p-8 shadow-xl">
+                <h2 className="text-2xl font-bold text-black mb-6">Contact Information</h2>
                 
-                <div className="space-y-8">
-                  <div className="flex items-start space-x-6 group">
-                    <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
-                      <FaMapMarkerAlt className="w-8 h-8 text-white" />
+                <div className="space-y-5">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <FaMapMarkerAlt className="w-5 h-5 text-white" />
                     </div>
-                    <div className="transform group-hover:translate-x-2 transition-transform duration-300">
-                      <h3 className="text-xl font-bold text-black mb-2">Academy Location</h3>
-                      <p className="text-base text-gray-700 leading-relaxed">
+                    <div>
+                      <h3 className="text-base font-bold text-black mb-1">Academy Location</h3>
+                      <p className="text-sm text-gray-700 leading-relaxed">
                         Combat Warrior Taekwon-do Association<br />
-                        Karnataka, India<br />
-                        <span className="text-sm text-slate-500">Exact address provided upon enrollment</span>
+                        Karnataka, India
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start space-x-6 group">
-                    <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
-                      <FaPhone className="w-8 h-8 text-white" />
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <FaPhone className="w-5 h-5 text-white" />
                     </div>
-                    <div className="transform group-hover:translate-x-2 transition-transform duration-300">
-                      <h3 className="text-xl font-bold text-black mb-2">Phone Number</h3>
-                      <p className="text-base text-gray-700 text-lg font-semibold">+91 9019157225</p>
-                      <p className="text-base text-gray-700 text-sm">Available 9:00 AM - 8:00 PM</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-6 group">
-                    <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
-                      <FaEnvelope className="w-8 h-8 text-white" />
-                    </div>
-                    <div className="transform group-hover:translate-x-2 transition-transform duration-300">
-                      <h3 className="text-xl font-bold text-black mb-2">Email Address</h3>
-                      <p className="text-base text-gray-700 text-lg">hello@parnetsgroup.com</p>
-                      <p className="text-base text-gray-700 text-sm">We respond within 24 hours</p>
+                    <div>
+                      <h3 className="text-base font-bold text-black mb-1">Phone Number</h3>
+                      <p className="text-sm text-gray-700 font-semibold">+91 9019157225</p>
                     </div>
                   </div>
 
-                  <div className="flex items-start space-x-6 group">
-                    <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
-                      <FaClock className="w-8 h-8 text-white" />
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <FaEnvelope className="w-5 h-5 text-white" />
                     </div>
-                    <div className="transform group-hover:translate-x-2 transition-transform duration-300">
-                      <h3 className="text-xl font-bold text-black mb-2">Training Schedule</h3>
-                      <div className="text-base text-gray-700">
-                        <p className="mb-1"><strong>Monday - Friday:</strong> 6:00 AM - 8:00 PM</p>
-                        <p><strong>Saturday - Sunday:</strong> 8:00 AM - 6:00 PM</p>
+                    <div>
+                      <h3 className="text-base font-bold text-black mb-1">Email Address</h3>
+                      <p className="text-sm text-gray-700">hello@parnetsgroup.com</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <FaClock className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-black mb-1">Training Schedule</h3>
+                      <div className="text-sm text-gray-700">
+                        <p className="mb-1"><strong>Mon-Fri:</strong> 6:00 AM - 8:00 PM</p>
+                        <p><strong>Sat-Sun:</strong> 8:00 AM - 6:00 PM</p>
                       </div>
                     </div>
                   </div>
@@ -101,95 +171,132 @@ function Contact() {
             </div>
 
             {/* Contact Form */}
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-              <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-8 text-white">
-                <h2 className="text-3xl font-bold mb-2 text-white">Send us a Message</h2>
-                <p className="text-base text-slate-300">We'll get back to you as soon as possible</p>
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+              <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-6 text-white">
+                <h2 className="text-2xl font-bold mb-2 text-white">Send us a Message</h2>
+                <p className="text-base text-slate-300">We'll get back to you soon</p>
               </div>
               
-              <form className="p-6 space-y-4">
+              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                {/* Status Message */}
+                {submitStatus && (
+                  <div className={`p-4 rounded-lg mb-4 ${
+                    submitStatus.type === 'success' 
+                      ? 'bg-green-50 border border-green-200 text-green-700' 
+                      : 'bg-red-50 border border-red-200 text-red-700'
+                  }`}>
+                    <div className="flex items-center">
+                      {submitStatus.type === 'success' ? (
+                        <FaCheckCircle className="mr-2" />
+                      ) : (
+                        <FaQuestionCircle className="mr-2" />
+                      )}
+                      <span className="text-sm">{submitStatus.message}</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-3">
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
                       Your Name *
                     </label>
                     <input
                       type="text"
-                      className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
-                      placeholder="Enter your full name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                      placeholder="Enter your name"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-3">
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
                       Phone Number
                     </label>
                     <input
                       type="tel"
-                      className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
                       placeholder="+91 XXXXX XXXXX"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
                     Email Address *
                   </label>
                   <input
                     type="email"
-                    className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
                     placeholder="your.email@example.com"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
                     Inquiry Type *
                   </label>
-                  <select className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
+                  <select 
+                    name="inquiryType"
+                    value={formData.inquiryType}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                  >
                     <option value="">Select inquiry type</option>
                     <option value="admission">Admission Information</option>
                     <option value="courses">Course Details</option>
-                    <option value="schedule">Class Schedules</option>
-                    <option value="fees">Fee Structure</option>
                     <option value="trial">Trial Class</option>
                     <option value="other">Other</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
                     Message *
                   </label>
                   <textarea
+                    name="message"
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    required
                     rows="4"
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300 resize-none"
-                    placeholder="Tell us about your interest in Taekwon-do, any specific questions, or how we can help you..."
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300 resize-none"
+                    placeholder="Tell us about your interest in Taekwon-do..."
                   ></textarea>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <input
-                    type="checkbox"
-                    className="w-5 h-5 text-amber-500 border-2 border-slate-300 rounded focus:ring-amber-500 mt-1"
-                  />
-                  <label className="text-sm text-slate-600">
-                    I agree to receive communications about programs, events, and updates from Combat Warrior Taekwon-do Academy.
-                  </label>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white py-4 rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transform hover:scale-105 hover:rotate-1 transition-all duration-500 shadow-lg group"
-                  style={{
-                    transform: 'rotateX(5deg)',
-                    transformStyle: 'preserve-3d'
-                  }}
+                  disabled={isSubmitting}
+                  className={`w-full py-3 rounded-lg font-bold text-base transform hover:scale-105 transition-all duration-300 shadow-lg ${
+                    isSubmitting 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700'
+                  }`}
                 >
                   <span className="flex items-center justify-center">
-                    <FaPaperPlane className="mr-2 group-hover:animate-bounce" />
-                    Send Message
+                    {isSubmitting ? (
+                      <>
+                        <FaSpinner className="mr-2 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <FaPaperPlane className="mr-2" />
+                        Send Message
+                      </>
+                    )}
                   </span>
                 </button>
               </form>
@@ -197,31 +304,31 @@ function Contact() {
           </div>
 
           {/* Google Map Section */}
-          <div className="mt-24">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-black mb-6">
-                Find <span className="text-red-600">Our</span> <span className="text-yellow-600">Location</span>
-              </h2>
-              <p className="text-base text-gray-700">Visit our dojang and experience authentic Taekwon-Do training</p>
-            </div>
-            
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-              <div className="h-96 bg-gray-200 flex items-center justify-center">
-                {/* Google Map Embed - Replace with actual Google Maps embed code */}
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d248849.886539092!2d77.49085452148641!3d12.953945614117967!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae1670c9b44e6d%3A0xf8dfc3e8517e4fe0!2sBengaluru%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1703123456789!5m2!1sen!2sin"
-                  width="100%"
-                  height="400"
-                  style={{ border: 0 }}
-                  allowFullScreen=""
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="w-full h-96"
-                  title="Combat Warrior Taekwon-Do Location"
-                ></iframe>
+          <div className="mt-24 flex justify-center">
+            <div className="w-full max-w-4xl">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-black mb-6">
+                  Find <span className="text-red-600">Our</span> <span className="text-yellow-600">Location</span>
+                </h2>
+                <p className="text-base text-gray-700">Visit our dojang and experience authentic Taekwon-Do training</p>
               </div>
               
-             
+              <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+                <div className="h-80 bg-gray-200 flex items-center justify-center">
+                  {/* Google Map Embed - Replace with actual Google Maps embed code */}
+                  <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d248849.886539092!2d77.49085452148641!3d12.953945614117967!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae1670c9b44e6d%3A0xf8dfc3e8517e4fe0!2sBengaluru%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1703123456789!5m2!1sen!2sin"
+                    width="100%"
+                    height="320"
+                    style={{ border: 0 }}
+                    allowFullScreen=""
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    className="w-full h-80"
+                    title="Combat Warrior Taekwon-Do Location"
+                  ></iframe>
+                </div>
+              </div>
             </div>
           </div>
 

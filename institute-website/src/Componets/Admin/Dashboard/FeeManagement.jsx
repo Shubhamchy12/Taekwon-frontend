@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 function FeeManagement() {
-  const [feeRecords] = useState([
+  const [feeRecords, setFeeRecords] = useState([
     {
       id: 'FEE001',
       studentId: 'STU001',
@@ -55,7 +55,19 @@ function FeeManagement() {
   const [selectedMonth, setSelectedMonth] = useState('2024-01');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showAddFeeModal, setShowAddFeeModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [paymentForm, setPaymentForm] = useState({
+    method: 'Cash',
+    transactionId: '',
+    paidDate: new Date().toISOString().split('T')[0]
+  });
+  const [newFeeForm, setNewFeeForm] = useState({
+    studentName: '',
+    course: 'Beginner',
+    amount: 2000,
+    dueDate: ''
+  });
 
   const filteredRecords = feeRecords.filter(record => {
     const matchesMonth = record.dueDate.startsWith(selectedMonth);
@@ -72,6 +84,88 @@ function FeeManagement() {
     setShowPaymentModal(true);
   };
 
+  const handlePaymentSubmit = (e) => {
+    e.preventDefault();
+    
+    // Update the fee record with payment information
+    const updatedRecords = feeRecords.map(record => {
+      if (record.id === selectedRecord.id) {
+        return {
+          ...record,
+          status: 'Paid',
+          paidDate: paymentForm.paidDate,
+          method: paymentForm.method,
+          transactionId: paymentForm.transactionId || `${paymentForm.method.toUpperCase()}${Date.now()}`
+        };
+      }
+      return record;
+    });
+
+    setFeeRecords(updatedRecords);
+    setShowPaymentModal(false);
+    setPaymentForm({
+      method: 'Cash',
+      transactionId: '',
+      paidDate: new Date().toISOString().split('T')[0]
+    });
+    alert('Payment recorded successfully!');
+  };
+
+  const handleAddFee = (e) => {
+    e.preventDefault();
+    
+    const newFee = {
+      id: `FEE${String(feeRecords.length + 1).padStart(3, '0')}`,
+      studentId: `STU${String(feeRecords.length + 1).padStart(3, '0')}`,
+      studentName: newFeeForm.studentName,
+      course: newFeeForm.course,
+      amount: parseInt(newFeeForm.amount),
+      dueDate: newFeeForm.dueDate,
+      paidDate: null,
+      status: 'Pending',
+      method: null,
+      transactionId: null
+    };
+
+    setFeeRecords([...feeRecords, newFee]);
+    setShowAddFeeModal(false);
+    setNewFeeForm({
+      studentName: '',
+      course: 'Beginner',
+      amount: 2000,
+      dueDate: ''
+    });
+    alert('Fee record added successfully!');
+  };
+
+  const handleExportReport = () => {
+    const csvContent = [
+      ['Fee ID', 'Student Name', 'Course', 'Amount', 'Due Date', 'Status', 'Payment Method', 'Transaction ID'],
+      ...filteredRecords.map(record => [
+        record.id,
+        record.studentName,
+        record.course,
+        record.amount,
+        record.dueDate,
+        record.status,
+        record.method || '',
+        record.transactionId || ''
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fee_report_${selectedMonth}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleViewRecord = (record) => {
+    alert(`Fee Details:\n\nStudent: ${record.studentName}\nCourse: ${record.course}\nAmount: ₹${record.amount}\nStatus: ${record.status}\nDue Date: ${record.dueDate}${record.paidDate ? `\nPaid Date: ${record.paidDate}` : ''}`);
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -80,9 +174,12 @@ function FeeManagement() {
           <h1 className="text-4xl font-black text-slate-800 mb-2">Fee Management</h1>
           <p className="text-slate-600">Track and manage student fee payments digitally</p>
         </div>
-        <button className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition-all duration-300 flex items-center space-x-2">
+        <button 
+          onClick={() => setShowAddFeeModal(true)}
+          className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition-all duration-300 flex items-center space-x-2"
+        >
           <span>💰</span>
-          <span>Record Payment</span>
+          <span>Add Fee Record</span>
         </button>
       </div>
 
@@ -139,7 +236,10 @@ function FeeManagement() {
           </div>
           
           <div className="flex items-end">
-            <button className="w-full bg-slate-700 text-white px-4 py-3 rounded-xl hover:bg-slate-800 transition-colors font-semibold">
+            <button 
+              onClick={handleExportReport}
+              className="w-full bg-slate-700 text-white px-4 py-3 rounded-xl hover:bg-slate-800 transition-colors font-semibold"
+            >
               Export Report
             </button>
           </div>
@@ -215,7 +315,10 @@ function FeeManagement() {
                           Record Payment
                         </button>
                       )}
-                      <button className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                      <button 
+                        onClick={() => handleViewRecord(record)}
+                        className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                      >
                         View
                       </button>
                     </div>
@@ -297,21 +400,38 @@ function FeeManagement() {
               <div className="text-2xl font-bold text-slate-800">₹{selectedRecord.amount.toLocaleString()}</div>
             </div>
             
-            <form className="space-y-4">
+            <form onSubmit={handlePaymentSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Payment Method</label>
-                <select className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
-                  <option>Cash</option>
-                  <option>UPI</option>
-                  <option>Bank Transfer</option>
-                  <option>Card</option>
+                <select 
+                  value={paymentForm.method}
+                  onChange={(e) => setPaymentForm({...paymentForm, method: e.target.value})}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Card">Card</option>
                 </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Payment Date</label>
+                <input 
+                  type="date"
+                  value={paymentForm.paidDate}
+                  onChange={(e) => setPaymentForm({...paymentForm, paidDate: e.target.value})}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  required
+                />
               </div>
               
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Transaction ID (Optional)</label>
                 <input 
                   type="text" 
+                  value={paymentForm.transactionId}
+                  onChange={(e) => setPaymentForm({...paymentForm, transactionId: e.target.value})}
                   placeholder="Enter transaction reference"
                   className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500" 
                 />
@@ -330,6 +450,94 @@ function FeeManagement() {
                   className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-300"
                 >
                   Record Payment
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Fee Modal */}
+      {showAddFeeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-slate-800">Add Fee Record</h2>
+              <button 
+                onClick={() => setShowAddFeeModal(false)}
+                className="text-slate-500 hover:text-slate-700 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleAddFee} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Student Name</label>
+                <input 
+                  type="text"
+                  value={newFeeForm.studentName}
+                  onChange={(e) => setNewFeeForm({...newFeeForm, studentName: e.target.value})}
+                  placeholder="Enter student name"
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Course</label>
+                <select 
+                  value={newFeeForm.course}
+                  onChange={(e) => {
+                    const course = e.target.value;
+                    let amount = 2000;
+                    if (course === 'Intermediate') amount = 2500;
+                    if (course === 'Advanced') amount = 3000;
+                    setNewFeeForm({...newFeeForm, course, amount});
+                  }}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="Beginner">Beginner Course</option>
+                  <option value="Intermediate">Intermediate Course</option>
+                  <option value="Advanced">Advanced Course</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Amount</label>
+                <input 
+                  type="number"
+                  value={newFeeForm.amount}
+                  onChange={(e) => setNewFeeForm({...newFeeForm, amount: e.target.value})}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Due Date</label>
+                <input 
+                  type="date"
+                  value={newFeeForm.dueDate}
+                  onChange={(e) => setNewFeeForm({...newFeeForm, dueDate: e.target.value})}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  required
+                />
+              </div>
+              
+              <div className="flex space-x-4 mt-6">
+                <button 
+                  type="button"
+                  onClick={() => setShowAddFeeModal(false)}
+                  className="flex-1 bg-slate-300 text-slate-700 py-3 rounded-xl font-semibold hover:bg-slate-400 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition-all duration-300"
+                >
+                  Add Fee Record
                 </button>
               </div>
             </form>

@@ -79,7 +79,7 @@ function About() {
           <div className="text-center animate-fade-in-up">
             <div className="transform hover:scale-105 transition-all duration-500">
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                About Combat <span className="text-red-400">Warrior</span> <span className="text-yellow-400">Taekwon-Do</span>
+                About Combat <span className="text-white">Warrior</span> <span className="text-white">Taekwon-Do</span>
               </h1>
               <p className="text-lg md:text-xl text-white max-w-3xl mx-auto font-medium">
                 Authentic ITF Taekwon-Do training in Karnataka, preserving the traditional 

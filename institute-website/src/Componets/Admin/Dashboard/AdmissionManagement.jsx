@@ -10,90 +10,138 @@ function AdmissionManagement() {
     courseLevel: '',
     search: ''
   });
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    itemsPerPage: 10
+  const [stats, setStats] = useState({
+    totalApplications: 0,
+    pendingApplications: 0,
+    approvedApplications: 0,
+    thisMonthApplications: 0
   });
 
+  // Load admissions from localStorage
   useEffect(() => {
-    fetchAdmissions();
-  }, [filters, pagination.currentPage]);
-
-  const fetchAdmissions = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      const queryParams = new URLSearchParams({
-        page: pagination.currentPage,
-        limit: pagination.itemsPerPage,
-        ...filters
-      });
-
-      const response = await fetch(`http://localhost:5000/api/admin/admissions?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAdmissions(data.data.admissions);
-        setPagination(data.data.pagination);
-      } else {
-        console.error('Failed to fetch admissions');
+    const loadAdmissions = () => {
+      try {
+        const storedAdmissions = JSON.parse(localStorage.getItem('admissions') || '[]');
+        setAdmissions(storedAdmissions);
+        
+        // Calculate stats
+        const totalApplications = storedAdmissions.length;
+        const pendingApplications = storedAdmissions.filter(admission => admission.status === 'pending').length;
+        const approvedApplications = storedAdmissions.filter(admission => admission.status === 'approved').length;
+        
+        const thisMonth = new Date();
+        thisMonth.setDate(1);
+        thisMonth.setHours(0, 0, 0, 0);
+        
+        const thisMonthApplications = storedAdmissions.filter(admission => {
+          const submittedDate = new Date(admission.submittedAt);
+          return submittedDate >= thisMonth;
+        }).length;
+        
+        setStats({ totalApplications, pendingApplications, approvedApplications, thisMonthApplications });
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading admissions:', error);
+        setAdmissions([]);
+        setStats({ totalApplications: 0, pendingApplications: 0, approvedApplications: 0, thisMonthApplications: 0 });
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching admissions:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadAdmissions();
+  }, []);
+
+  // Filter admissions based on current filters
+  const filteredAdmissions = admissions.filter(admission => {
+    const matchesStatus = !filters.status || admission.status === filters.status;
+    const matchesCourseLevel = !filters.courseLevel || admission.courseLevel === filters.courseLevel;
+    const matchesSearch = !filters.search || 
+      admission.fullName.toLowerCase().includes(filters.search.toLowerCase()) ||
+      admission.email.toLowerCase().includes(filters.search.toLowerCase()) ||
+      admission.phone.toLowerCase().includes(filters.search.toLowerCase());
+    
+    return matchesStatus && matchesCourseLevel && matchesSearch;
+  });
 
   const handleStatusUpdate = async (admissionId, newStatus, adminNotes = '') => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/admin/admissions/${admissionId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          status: newStatus,
-          adminNotes
-        })
+      const updatedAdmissions = admissions.map(admission => {
+        if (admission._id === admissionId) {
+          return {
+            ...admission,
+            status: newStatus,
+            adminNotes,
+            reviewedAt: new Date().toISOString(),
+            ...(newStatus === 'approved' && !admission.studentId ? { studentId: generateStudentId() } : {})
+          };
+        }
+        return admission;
       });
-
-      if (response.ok) {
-        fetchAdmissions(); // Refresh the list
-        setShowModal(false);
-        setSelectedAdmission(null);
-      } else {
-        console.error('Failed to update admission status');
-      }
+      
+      setAdmissions(updatedAdmissions);
+      localStorage.setItem('admissions', JSON.stringify(updatedAdmissions));
+      
+      // Update stats
+      const totalApplications = updatedAdmissions.length;
+      const pendingApplications = updatedAdmissions.filter(admission => admission.status === 'pending').length;
+      const approvedApplications = updatedAdmissions.filter(admission => admission.status === 'approved').length;
+      
+      const thisMonth = new Date();
+      thisMonth.setDate(1);
+      thisMonth.setHours(0, 0, 0, 0);
+      
+      const thisMonthApplications = updatedAdmissions.filter(admission => {
+        const submittedDate = new Date(admission.submittedAt);
+        return submittedDate >= thisMonth;
+      }).length;
+      
+      setStats({ totalApplications, pendingApplications, approvedApplications, thisMonthApplications });
+      setShowModal(false);
+      setSelectedAdmission(null);
     } catch (error) {
       console.error('Error updating admission status:', error);
     }
   };
 
-  const viewAdmissionDetails = async (admissionId) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/admin/admissions/${admissionId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+  const generateStudentId = () => {
+    const year = new Date().getFullYear();
+    const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return `CW${year}${randomNum}`;
+  };
 
-      if (response.ok) {
-        const data = await response.json();
-        setSelectedAdmission(data.data.admission);
-        setShowModal(true);
+  const viewAdmissionDetails = (admissionId) => {
+    const admission = admissions.find(admission => admission._id === admissionId);
+    if (admission) {
+      setSelectedAdmission(admission);
+      setShowModal(true);
+    }
+  };
+
+  const handleDeleteAdmission = (admissionId) => {
+    if (window.confirm('Are you sure you want to delete this admission application?')) {
+      try {
+        const updatedAdmissions = admissions.filter(admission => admission._id !== admissionId);
+        setAdmissions(updatedAdmissions);
+        localStorage.setItem('admissions', JSON.stringify(updatedAdmissions));
+        
+        // Update stats
+        const totalApplications = updatedAdmissions.length;
+        const pendingApplications = updatedAdmissions.filter(admission => admission.status === 'pending').length;
+        const approvedApplications = updatedAdmissions.filter(admission => admission.status === 'approved').length;
+        
+        const thisMonth = new Date();
+        thisMonth.setDate(1);
+        thisMonth.setHours(0, 0, 0, 0);
+        
+        const thisMonthApplications = updatedAdmissions.filter(admission => {
+          const submittedDate = new Date(admission.submittedAt);
+          return submittedDate >= thisMonth;
+        }).length;
+        
+        setStats({ totalApplications, pendingApplications, approvedApplications, thisMonthApplications });
+      } catch (error) {
+        console.error('Error deleting admission:', error);
       }
-    } catch (error) {
-      console.error('Error fetching admission details:', error);
     }
   };
 
@@ -136,6 +184,65 @@ function AdmissionManagement() {
         <div className="mb-8">
           <h1 className="text-4xl font-black text-slate-800 mb-2">Admission Management</h1>
           <p className="text-slate-600">Review and manage student admission applications</p>
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Applications</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalApplications}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Pending Review</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pendingApplications}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Approved</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.approvedApplications}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">This Month</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.thisMonthApplications}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Filters */}
@@ -205,94 +312,78 @@ function AdmissionManagement() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    {admissions.map((admission) => (
-                      <tr key={admission.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4">
-                          <div>
-                            <div className="font-semibold text-slate-800">{admission.fullName}</div>
-                            <div className="text-sm text-slate-600">{admission.email}</div>
-                            <div className="text-sm text-slate-600">{admission.phone}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-slate-800 font-medium">
-                            {calculateAge(admission.dateOfBirth)} years
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getLevelColor(admission.courseLevel)}`}>
-                            {admission.courseLevel.charAt(0).toUpperCase() + admission.courseLevel.slice(1)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(admission.status)}`}>
-                            {admission.status.charAt(0).toUpperCase() + admission.status.slice(1)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-slate-600">
-                          {new Date(admission.submittedAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => viewAdmissionDetails(admission.id)}
-                              className="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600 transition-colors"
-                            >
-                              View
-                            </button>
-                            {admission.status === 'pending' && (
-                              <>
-                                <button
-                                  onClick={() => handleStatusUpdate(admission.id, 'approved')}
-                                  className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600 transition-colors"
-                                >
-                                  Approve
-                                </button>
-                                <button
-                                  onClick={() => handleStatusUpdate(admission.id, 'rejected')}
-                                  className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600 transition-colors"
-                                >
-                                  Reject
-                                </button>
-                              </>
-                            )}
-                          </div>
+                    {filteredAdmissions.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                          No admission applications found
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredAdmissions.map((admission) => (
+                        <tr key={admission._id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-6 py-4">
+                            <div>
+                              <div className="font-semibold text-slate-800">{admission.fullName}</div>
+                              <div className="text-sm text-slate-600">{admission.email}</div>
+                              <div className="text-sm text-slate-600">{admission.phone}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-slate-800 font-medium">
+                              {calculateAge(admission.dateOfBirth)} years
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getLevelColor(admission.courseLevel)}`}>
+                              {admission.courseLevel.charAt(0).toUpperCase() + admission.courseLevel.slice(1)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(admission.status)}`}>
+                              {admission.status.charAt(0).toUpperCase() + admission.status.slice(1)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-slate-600">
+                            {new Date(admission.submittedAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => viewAdmissionDetails(admission._id)}
+                                className="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600 transition-colors"
+                              >
+                                View
+                              </button>
+                              {admission.status === 'pending' && (
+                                <>
+                                  <button
+                                    onClick={() => handleStatusUpdate(admission._id, 'approved')}
+                                    className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600 transition-colors"
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={() => handleStatusUpdate(admission._id, 'rejected')}
+                                    className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600 transition-colors"
+                                  >
+                                    Reject
+                                  </button>
+                                </>
+                              )}
+                              <button
+                                onClick={() => handleDeleteAdmission(admission._id)}
+                                className="bg-gray-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-gray-600 transition-colors"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
-
-              {/* Pagination */}
-              {pagination.totalPages > 1 && (
-                <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between">
-                  <div className="text-sm text-slate-600">
-                    Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to{' '}
-                    {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of{' '}
-                    {pagination.totalItems} results
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => setPagination({ ...pagination, currentPage: pagination.currentPage - 1 })}
-                      disabled={pagination.currentPage === 1}
-                      className="px-3 py-1 border border-slate-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
-                    >
-                      Previous
-                    </button>
-                    <span className="px-3 py-1 bg-amber-500 text-white rounded-lg text-sm">
-                      {pagination.currentPage}
-                    </span>
-                    <button
-                      onClick={() => setPagination({ ...pagination, currentPage: pagination.currentPage + 1 })}
-                      disabled={pagination.currentPage === pagination.totalPages}
-                      className="px-3 py-1 border border-slate-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>
@@ -335,39 +426,57 @@ function AdmissionManagement() {
                       <p className="text-slate-800 capitalize">{selectedAdmission.gender}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
                       <p className="text-slate-800">{selectedAdmission.phone}</p>
                     </div>
-                  </div>
-                </div>
-
-                {/* Contact Information */}
-                <div className="mb-8">
-                  <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
-                    <span className="w-8 h-8 bg-amber-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">2</span>
-                    Contact Information
-                  </h3>
-                  <div className="bg-slate-50 p-6 rounded-xl">
-                    <div className="mb-4">
+                    <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
                       <p className="text-slate-800">{selectedAdmission.email}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
-                      <p className="text-slate-800">{selectedAdmission.address}</p>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Nationality</label>
+                      <p className="text-slate-800">{selectedAdmission.nationality || 'Not specified'}</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Course Selection */}
+                {/* Address Information */}
+                <div className="mb-8">
+                  <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
+                    <span className="w-8 h-8 bg-amber-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">2</span>
+                    Address Information
+                  </h3>
+                  <div className="bg-slate-50 p-6 rounded-xl">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Street Address</label>
+                        <p className="text-slate-800">{selectedAdmission.address}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">City</label>
+                        <p className="text-slate-800">{selectedAdmission.city || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">State</label>
+                        <p className="text-slate-800">{selectedAdmission.state || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">PIN Code</label>
+                        <p className="text-slate-800">{selectedAdmission.pincode || 'Not specified'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Training Information */}
                 <div className="mb-8">
                   <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
                     <span className="w-8 h-8 bg-amber-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">3</span>
-                    Course Selection
+                    Training Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-xl">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Course Level</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Training Level</label>
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${getLevelColor(selectedAdmission.courseLevel)}`}>
                         {selectedAdmission.courseLevel.charAt(0).toUpperCase() + selectedAdmission.courseLevel.slice(1)}
                       </span>
@@ -376,49 +485,151 @@ function AdmissionManagement() {
                       <label className="block text-sm font-medium text-slate-700 mb-1">Preferred Schedule</label>
                       <p className="text-slate-800 capitalize">{selectedAdmission.preferredSchedule || 'Not specified'}</p>
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Training Goals</label>
+                      <p className="text-slate-800 capitalize">{selectedAdmission.trainingGoals || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Previous Martial Arts Experience</label>
+                      <p className="text-slate-800 capitalize">{selectedAdmission.previousMartialArts || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Current Fitness Level</label>
+                      <p className="text-slate-800 capitalize">{selectedAdmission.fitnessLevel || 'Not specified'}</p>
+                    </div>
                   </div>
                 </div>
 
-                {/* Emergency Contact */}
+                {/* Emergency Contact & Guardian Information */}
                 <div className="mb-8">
                   <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
                     <span className="w-8 h-8 bg-amber-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">4</span>
-                    Emergency Contact
+                    Emergency Contact & Guardian Information
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-6 rounded-xl">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Contact Name</label>
-                      <p className="text-slate-800 font-semibold">{selectedAdmission.emergencyContactName}</p>
+                  <div className="bg-slate-50 p-6 rounded-xl">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Emergency Contact Name</label>
+                        <p className="text-slate-800 font-semibold">{selectedAdmission.emergencyContactName}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Emergency Contact Phone</label>
+                        <p className="text-slate-800">{selectedAdmission.emergencyContactPhone}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Relationship to Student</label>
+                        <p className="text-slate-800 capitalize">{selectedAdmission.relationshipToStudent}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Emergency Contact Address</label>
+                        <p className="text-slate-800">{selectedAdmission.emergencyContactAddress || 'Same as student address'}</p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Contact Phone</label>
-                      <p className="text-slate-800">{selectedAdmission.emergencyContactPhone}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Relationship</label>
-                      <p className="text-slate-800 capitalize">{selectedAdmission.relationshipToStudent}</p>
+                    
+                    {(selectedAdmission.parentGuardianName || selectedAdmission.parentGuardianPhone) && (
+                      <div className="border-t border-slate-200 pt-4">
+                        <h4 className="text-lg font-semibold text-slate-800 mb-3">Parent/Guardian Information</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Parent/Guardian Name</label>
+                            <p className="text-slate-800">{selectedAdmission.parentGuardianName || 'Not provided'}</p>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Parent/Guardian Phone</label>
+                            <p className="text-slate-800">{selectedAdmission.parentGuardianPhone || 'Not provided'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Medical & Health Information */}
+                <div className="mb-8">
+                  <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
+                    <span className="w-8 h-8 bg-amber-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">5</span>
+                    Medical & Health Information
+                  </h3>
+                  <div className="bg-slate-50 p-6 rounded-xl">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Medical Conditions</label>
+                        <p className="text-slate-800">{selectedAdmission.medicalConditions || 'None reported'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Allergies</label>
+                        <p className="text-slate-800">{selectedAdmission.allergies || 'None reported'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Current Medications</label>
+                        <p className="text-slate-800">{selectedAdmission.currentMedications || 'None reported'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Physician Name</label>
+                        <p className="text-slate-800">{selectedAdmission.physicianName || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Physician Phone</label>
+                        <p className="text-slate-800">{selectedAdmission.physicianPhone || 'Not provided'}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Medical Information */}
-                {selectedAdmission.medicalConditions && (
-                  <div className="mb-8">
-                    <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
-                      <span className="w-8 h-8 bg-amber-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">5</span>
-                      Medical Information
-                    </h3>
-                    <div className="bg-slate-50 p-6 rounded-xl">
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Medical Conditions</label>
-                      <p className="text-slate-800">{selectedAdmission.medicalConditions}</p>
+                {/* Additional Information */}
+                <div className="mb-8">
+                  <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
+                    <span className="w-8 h-8 bg-amber-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">6</span>
+                    Additional Information
+                  </h3>
+                  <div className="bg-slate-50 p-6 rounded-xl">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">How did you hear about us?</label>
+                        <p className="text-slate-800 capitalize">{selectedAdmission.howDidYouHear || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Special Requests/Notes</label>
+                        <p className="text-slate-800">{selectedAdmission.specialRequests || 'None'}</p>
+                      </div>
                     </div>
                   </div>
-                )}
+                </div>
+
+                {/* Consent & Agreements */}
+                <div className="mb-8">
+                  <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
+                    <span className="w-8 h-8 bg-amber-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">7</span>
+                    Consent & Agreements
+                  </h3>
+                  <div className="bg-slate-50 p-6 rounded-xl">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Terms & Conditions</label>
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${selectedAdmission.agreeToTerms ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          {selectedAdmission.agreeToTerms ? 'Agreed' : 'Not Agreed'}
+                        </span>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Photo/Video Consent</label>
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${selectedAdmission.agreeToPhotos ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {selectedAdmission.agreeToPhotos ? 'Consented' : 'Not Consented'}
+                        </span>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Communication Consent</label>
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${selectedAdmission.agreeToEmails ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {selectedAdmission.agreeToEmails ? 'Consented' : 'Not Consented'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Application Status */}
                 <div className="mb-8">
                   <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
-                    <span className="w-8 h-8 bg-amber-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">6</span>
+                    <span className="w-8 h-8 bg-amber-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">8</span>
                     Application Status
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-xl">
@@ -450,7 +661,10 @@ function AdmissionManagement() {
                 {/* Admin Notes */}
                 {selectedAdmission.adminNotes && (
                   <div className="mb-8">
-                    <h3 className="text-xl font-bold text-slate-800 mb-4">Admin Notes</h3>
+                    <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
+                      <span className="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">📝</span>
+                      Admin Notes
+                    </h3>
                     <div className="bg-blue-50 p-6 rounded-xl border-l-4 border-blue-500">
                       <p className="text-slate-800">{selectedAdmission.adminNotes}</p>
                     </div>
@@ -458,39 +672,51 @@ function AdmissionManagement() {
                 )}
 
                 {/* Action Buttons */}
-                {selectedAdmission.status === 'pending' && (
-                  <div className="flex flex-wrap gap-4 pt-6 border-t border-slate-200">
-                    <button
-                      onClick={() => {
-                        const notes = prompt('Add admin notes (optional):');
-                        handleStatusUpdate(selectedAdmission._id, 'approved', notes || '');
-                      }}
-                      className="bg-green-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-600 transition-colors"
-                    >
-                      Approve Application
-                    </button>
-                    <button
-                      onClick={() => {
-                        const notes = prompt('Add rejection reason:');
-                        if (notes) {
-                          handleStatusUpdate(selectedAdmission._id, 'rejected', notes);
-                        }
-                      }}
-                      className="bg-red-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-600 transition-colors"
-                    >
-                      Reject Application
-                    </button>
-                    <button
-                      onClick={() => {
-                        const notes = prompt('Add waitlist notes:');
-                        handleStatusUpdate(selectedAdmission._id, 'waitlist', notes || '');
-                      }}
-                      className="bg-blue-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-600 transition-colors"
-                    >
-                      Add to Waitlist
-                    </button>
-                  </div>
-                )}
+                <div className="flex flex-wrap gap-4 pt-6 border-t border-slate-200">
+                  {selectedAdmission.status === 'pending' && (
+                    <>
+                      <button
+                        onClick={() => {
+                          const notes = prompt('Add admin notes (optional):');
+                          handleStatusUpdate(selectedAdmission._id, 'approved', notes || '');
+                        }}
+                        className="bg-green-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-600 transition-colors"
+                      >
+                        Approve Application
+                      </button>
+                      <button
+                        onClick={() => {
+                          const notes = prompt('Add rejection reason:');
+                          if (notes) {
+                            handleStatusUpdate(selectedAdmission._id, 'rejected', notes);
+                          }
+                        }}
+                        className="bg-red-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-600 transition-colors"
+                      >
+                        Reject Application
+                      </button>
+                      <button
+                        onClick={() => {
+                          const notes = prompt('Add waitlist notes:');
+                          handleStatusUpdate(selectedAdmission._id, 'waitlist', notes || '');
+                        }}
+                        className="bg-blue-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-600 transition-colors"
+                      >
+                        Add to Waitlist
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => {
+                      handleDeleteAdmission(selectedAdmission._id);
+                      setShowModal(false);
+                      setSelectedAdmission(null);
+                    }}
+                    className="bg-gray-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors"
+                  >
+                    Delete Application
+                  </button>
+                </div>
               </div>
             </div>
           </div>

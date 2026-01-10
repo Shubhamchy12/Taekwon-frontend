@@ -7,6 +7,8 @@ import FeeManagement from './Dashboard/FeeManagement';
 import EventManagement from './Dashboard/EventManagement';
 import CertificationManagement from './Dashboard/CertificationManagement';
 import AdmissionManagement from './Dashboard/AdmissionManagement';
+import BeltManagement from './Dashboard/BeltManagement';
+import ContactManagement from './ContactManagement';
 
 function AdminDashboard({ onLogout }) {
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -19,6 +21,10 @@ function AdminDashboard({ onLogout }) {
         return <StudentManagement />;
       case 'attendance':
         return <AttendanceTracking />;
+      case 'belts':
+        return <BeltManagement />;
+      case 'contact':
+        return <ContactManagement />;
       case 'fees':
         return <FeeManagement />;
       case 'events':

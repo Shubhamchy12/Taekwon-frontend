@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { scrollToTop } from '../utils/useScrollToTop';
 
 function Footer() {
   return (
@@ -50,11 +51,11 @@ function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4 text-yellow-400">Quick Links</h4>
             <ul className="space-y-2">
-              <li><Link to="/" className="text-gray-300 hover:text-white transition-colors">Home</Link></li>
-              <li><Link to="/about" className="text-gray-300 hover:text-white transition-colors">About Us</Link></li>
-              <li><Link to="/courses" className="text-gray-300 hover:text-white transition-colors">Programs</Link></li>
-              <li><Link to="/admission" className="text-gray-300 hover:text-white transition-colors">Admission</Link></li>
-              <li><Link to="/contact" className="text-gray-300 hover:text-white transition-colors">Contact</Link></li>
+              <li><Link to="/" onClick={scrollToTop} className="text-gray-300 hover:text-white transition-colors">Home</Link></li>
+              <li><Link to="/about" onClick={scrollToTop} className="text-gray-300 hover:text-white transition-colors">About Us</Link></li>
+              <li><Link to="/courses" onClick={scrollToTop} className="text-gray-300 hover:text-white transition-colors">Programs</Link></li>
+              <li><Link to="/admission" onClick={scrollToTop} className="text-gray-300 hover:text-white transition-colors">Admission</Link></li>
+              <li><Link to="/contact" onClick={scrollToTop} className="text-gray-300 hover:text-white transition-colors">Contact</Link></li>
             </ul>
           </div>
 

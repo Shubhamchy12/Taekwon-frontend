@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { scrollToTop } from '../utils/useScrollToTop';
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,7 +21,11 @@ function Navbar() {
         <div className="flex justify-between h-18">
           {/* Logo and Brand */}
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-3 group">
+            <Link 
+              to="/" 
+              className="flex items-center space-x-3 group"
+              onClick={scrollToTop}
+            >
               <div className="relative">
                 <img 
                   src="/combat-warrior-logo.png" 
@@ -29,12 +34,12 @@ function Navbar() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-red-500/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
-              <div className="hidden sm:block">
+              {/* <div className="hidden sm:block">
                 <h1 className="text-xl font-bold bg-gradient-to-r from-red-600 via-yellow-600 to-red-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
                   Combat Warrior
                 </h1>
                 <p className="text-xs text-gray-600 font-semibold tracking-wide">ITF Taekwon-Do</p>
-              </div>
+              </div> */}
             </Link>
           </div>
 
@@ -44,6 +49,7 @@ function Navbar() {
               <Link
                 key={item.name}
                 to={item.href}
+                onClick={scrollToTop}
                 className={`relative px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 transform hover:scale-105 group ${
                   location.pathname === item.href
                     ? 'text-white bg-gradient-to-r from-red-600 to-yellow-500 shadow-lg'
@@ -89,7 +95,10 @@ function Navbar() {
                       ? 'text-white bg-gradient-to-r from-red-600 to-yellow-500 shadow-md'
                       : 'text-gray-800 hover:text-white hover:bg-gradient-to-r hover:from-yellow-500 hover:to-red-600'
                   }`}
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => {
+                    setIsOpen(false);
+                    scrollToTop();
+                  }}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   {item.name}

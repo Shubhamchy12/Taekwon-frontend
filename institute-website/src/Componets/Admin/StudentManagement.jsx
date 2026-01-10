@@ -289,49 +289,120 @@ function StudentManagement() {
 
       {/* Add Student Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Student</h3>
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Student Name"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                />
-                <input
-                  type="email"
-                  placeholder="Email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                />
-                <input
-                  type="tel"
-                  placeholder="Phone Number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                />
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-transparent">
-                  <option value="">Select Program</option>
-                  <option value="Little Warriors">Little Warriors</option>
-                  <option value="Junior Program">Junior Program</option>
-                  <option value="Teen Program">Teen Program</option>
-                  <option value="Adult Program">Adult Program</option>
-                </select>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-slate-800">Add New Student</h2>
+              <button 
+                onClick={() => setShowAddModal(false)}
+                className="text-slate-500 hover:text-slate-700 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Full Name *</label>
+                  <input
+                    type="text"
+                    placeholder="Enter student name"
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Age</label>
+                  <input
+                    type="number"
+                    placeholder="Enter age"
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Email *</label>
+                  <input
+                    type="email"
+                    placeholder="student@example.com"
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Phone *</label>
+                  <input
+                    type="tel"
+                    placeholder="+91 9876543210"
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Program *</label>
+                  <select className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" required>
+                    <option value="">Select Program</option>
+                    <option value="Little Warriors">Little Warriors</option>
+                    <option value="Junior Program">Junior Program</option>
+                    <option value="Teen Program">Teen Program</option>
+                    <option value="Adult Program">Adult Program</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Belt Level *</label>
+                  <select className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" required>
+                    <option value="">Select Belt</option>
+                    <option value="White Belt">White Belt</option>
+                    <option value="Yellow Belt">Yellow Belt</option>
+                    <option value="Green Belt">Green Belt</option>
+                    <option value="Blue Belt">Blue Belt</option>
+                    <option value="Red Belt">Red Belt</option>
+                    <option value="Black Belt 1st Dan">Black Belt 1st Dan</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Parent/Guardian Name</label>
+                  <input
+                    type="text"
+                    placeholder="Parent or guardian name"
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Parent/Guardian Phone</label>
+                  <input
+                    type="tel"
+                    placeholder="+91 9876543210"
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  />
+                </div>
               </div>
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
+              
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Address</label>
+                <textarea
+                  rows="3"
+                  placeholder="Enter complete address"
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+                ></textarea>
+              </div>
+              
+              <div className="flex justify-end space-x-4 pt-4">
+                <button 
+                  type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                  className="px-6 py-3 bg-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-400 transition-colors"
                 >
                   Cancel
                 </button>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                <button 
+                  type="submit"
+                  className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition-colors"
                 >
                   Add Student
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}

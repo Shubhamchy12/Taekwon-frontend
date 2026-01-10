@@ -145,7 +145,7 @@ function Courses() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 animate-fade-in-up">
           <div className="transform hover:scale-105 transition-all duration-500">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-              Training <span className="text-red-400">Programs</span>
+              Training <span className="text-white">Programs</span>
             </h1>
             <p className="text-lg md:text-xl text-white max-w-3xl mx-auto">
               Discover our comprehensive Taekwon-Do programs designed for every age and skill level. 

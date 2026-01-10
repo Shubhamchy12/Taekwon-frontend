@@ -170,20 +170,15 @@ function Home() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full h-full">
           <div className="flex justify-start items-start min-h-screen pt-20">
             <div className="text-white text-left max-w-lg">
-              <div className="mb-6">
-                <span className="inline-block px-4 py-2 bg-black bg-opacity-80 rounded-full text-xs font-bold backdrop-blur-sm border-2 border-yellow-400">
-                  🥋 Karnataka's Premier ITF Taekwon-Do Dojang
-                </span>
-              </div>
               
               <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
                 {heroSlides[currentSlide].title.split(' ').map((word, index) => (
                   <span
                     key={index}
-                    className="inline-block animate-fade-in-up"
+                    className="inline-block animate-fade-in-up mr-2"
                     style={{ animationDelay: `${index * 200}ms` }}
                   >
-                    {word}{' '}
+                    {word}
                   </span>
                 ))}
               </h1>

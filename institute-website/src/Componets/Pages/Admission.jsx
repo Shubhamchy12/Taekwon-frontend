@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import image from '../../assets/image.png';
 import { 
   FaUser, 
@@ -13,10 +14,190 @@ import {
   FaBolt,
   FaShieldAlt,
   FaUsers,
-  FaStar
+  FaStar,
+  FaSpinner
 } from 'react-icons/fa';
 
 function Admission() {
+  const [formData, setFormData] = useState({
+    // Personal Information
+    fullName: '',
+    dateOfBirth: '',
+    gender: '',
+    phone: '',
+    email: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    nationality: 'Indian',
+    
+    // Course Information
+    courseLevel: '',
+    preferredSchedule: '',
+    trainingGoals: '',
+    previousMartialArts: '',
+    fitnessLevel: '',
+    
+    // Emergency Contact
+    emergencyContactName: '',
+    emergencyContactPhone: '',
+    relationshipToStudent: '',
+    emergencyContactAddress: '',
+    
+    // Medical & Health Information
+    medicalConditions: '',
+    
+    // Additional Information
+    howDidYouHear: '',
+    specialRequests: '',
+    parentGuardianName: '', // For minors
+    parentGuardianPhone: '', // For minors
+    
+    // Agreement
+    agreeToTerms: false,
+    agreeToPhotos: false,
+    agreeToEmails: false
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null);
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!formData.fullName || !formData.dateOfBirth || !formData.gender || 
+        !formData.phone || !formData.email || !formData.address || 
+        !formData.city || !formData.state || !formData.pincode ||
+        !formData.courseLevel || !formData.emergencyContactName || 
+        !formData.emergencyContactPhone || !formData.relationshipToStudent || 
+        !formData.agreeToTerms) {
+      setSubmitStatus({
+        type: 'error',
+        message: 'Please fill in all required fields and agree to terms.'
+      });
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(formData.email)) {
+      setSubmitStatus({
+        type: 'error',
+        message: 'Please enter a valid email address.'
+      });
+      return;
+    }
+
+    // Phone validation
+    const phoneRegex = /^[+]?[1-9][\d]{9,14}$/;
+    if (!phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
+      setSubmitStatus({
+        type: 'error',
+        message: 'Please enter a valid phone number.'
+      });
+      return;
+    }
+
+    // Age validation (minimum 5 years old)
+    const birthDate = new Date(formData.dateOfBirth);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    if (age < 5) {
+      setSubmitStatus({
+        type: 'error',
+        message: 'Applicant must be at least 5 years old.'
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      // Create admission object
+      const newAdmission = {
+        _id: Date.now().toString(),
+        ...formData,
+        status: 'pending',
+        submittedAt: new Date().toISOString()
+      };
+      
+      // Get existing admissions from localStorage
+      const existingAdmissions = JSON.parse(localStorage.getItem('admissions') || '[]');
+      
+      // Check if email already exists
+      const existingApplication = existingAdmissions.find(admission => admission.email === formData.email);
+      if (existingApplication) {
+        setSubmitStatus({
+          type: 'error',
+          message: 'An application with this email already exists.'
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Add new admission to the beginning of the array
+      const updatedAdmissions = [newAdmission, ...existingAdmissions];
+      
+      // Save to localStorage
+      localStorage.setItem('admissions', JSON.stringify(updatedAdmissions));
+      
+      console.log('Admission application submitted successfully:', newAdmission);
+
+      setSubmitStatus({
+        type: 'success',
+        message: 'Application submitted successfully! We will review your application and contact you within 24-48 hours.'
+      });
+      
+      // Reset form
+      setFormData({
+        fullName: '',
+        dateOfBirth: '',
+        gender: '',
+        phone: '',
+        email: '',
+        address: '',
+        city: '',
+        state: '',
+        pincode: '',
+        nationality: 'Indian',
+        courseLevel: '',
+        preferredSchedule: '',
+        trainingGoals: '',
+        previousMartialArts: '',
+        fitnessLevel: '',
+        emergencyContactName: '',
+        emergencyContactPhone: '',
+        relationshipToStudent: '',
+        emergencyContactAddress: '',
+        medicalConditions: '',
+        howDidYouHear: '',
+        specialRequests: '',
+        parentGuardianName: '',
+        parentGuardianPhone: '',
+        agreeToTerms: false,
+        agreeToPhotos: false,
+        agreeToEmails: false
+      });
+    } catch (error) {
+      console.error('Admission form submission error:', error);
+      setSubmitStatus({
+        type: 'error',
+        message: 'Error submitting application. Please try again.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <div style={{ perspective: '1000px' }}>
       {/* Hero Section */}
@@ -44,7 +225,7 @@ function Admission() {
           </div>
           <div className="transform hover:scale-105 transition-all duration-500">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-              Join <span className="text-red-400">Combat</span> <span className="text-yellow-400">Warrior</span>
+              Join <span className="text-white">Combat</span> <span className="text-white">Warrior</span>
             </h1>
             <p className="text-lg md:text-xl text-white max-w-4xl mx-auto leading-relaxed">
               Begin your martial arts journey with Karnataka's premier Taekwon-do academy. 
@@ -66,7 +247,24 @@ function Admission() {
               <p className="text-slate-300">All fields marked with * are required</p>
             </div>
 
-            <form className="p-12 space-y-10">
+            <form onSubmit={handleSubmit} className="p-12 space-y-10">
+              {/* Status Message */}
+              {submitStatus && (
+                <div className={`p-4 rounded-xl mb-6 ${
+                  submitStatus.type === 'success' 
+                    ? 'bg-green-50 border border-green-200 text-green-700' 
+                    : 'bg-red-50 border border-red-200 text-red-700'
+                }`}>
+                  <div className="flex items-center">
+                    {submitStatus.type === 'success' ? (
+                      <FaCheckCircle className="mr-2" />
+                    ) : (
+                      <FaUser className="mr-2" />
+                    )}
+                    {submitStatus.message}
+                  </div>
+                </div>
+              )}
               {/* Personal Information */}
               <div>
                 <div className="flex items-center mb-6">
@@ -84,6 +282,10 @@ function Admission() {
                     </label>
                     <input
                       type="text"
+                      name="fullName"
+                      value={formData.fullName}
+                      onChange={handleInputChange}
+                      required
                       className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
                       placeholder="Enter your complete name"
                     />
@@ -95,6 +297,10 @@ function Admission() {
                     </label>
                     <input
                       type="date"
+                      name="dateOfBirth"
+                      value={formData.dateOfBirth}
+                      onChange={handleInputChange}
+                      required
                       className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
                     />
                   </div>
@@ -103,7 +309,12 @@ function Admission() {
                       <FaUsers className="text-amber-500 mr-2" />
                       Gender *
                     </label>
-                    <select className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
+                    <select 
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
                       <option value="">Select Gender</option>
                       <option value="male">Male</option>
                       <option value="female">Female</option>
@@ -117,23 +328,14 @@ function Admission() {
                     </label>
                     <input
                       type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      required
                       className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
                       placeholder="+91 XXXXX XXXXX"
                     />
                   </div>
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              <div>
-                <div className="flex items-center mb-6">
-                  <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mr-4">
-                    <FaEnvelope className="text-white text-sm" />
-                  </div>
-                  <h3 className="text-3xl font-bold text-black">Contact Information</h3>
-                </div>
-                
-                <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
                       <FaEnvelope className="text-amber-500 mr-2" />
@@ -141,6 +343,10 @@ function Admission() {
                     </label>
                     <input
                       type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
                       className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
                       placeholder="your.email@example.com"
                     />
@@ -148,24 +354,94 @@ function Admission() {
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
                       <FaMapMarkerAlt className="text-amber-500 mr-2" />
-                      Complete Address *
+                      Nationality
                     </label>
-                    <textarea
-                      rows="4"
-                      className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300 resize-none"
-                      placeholder="Enter your complete address with city, state, and pincode"
-                    ></textarea>
+                    <select 
+                      name="nationality"
+                      value={formData.nationality}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
+                      <option value="Indian">Indian</option>
+                      <option value="Other">Other</option>
+                    </select>
                   </div>
                 </div>
               </div>
 
-              {/* Course Selection */}
+              {/* Address Information */}
+              <div>
+                <div className="flex items-center mb-6">
+                  <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mr-4">
+                    <FaMapMarkerAlt className="text-white text-sm" />
+                  </div>
+                  <h3 className="text-3xl font-bold text-black">Address Information</h3>
+                </div>
+                
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaMapMarkerAlt className="text-amber-500 mr-2" />
+                      Street Address *
+                    </label>
+                    <textarea
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      required
+                      rows="3"
+                      className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300 resize-none"
+                      placeholder="Enter your complete street address"
+                    ></textarea>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-3">City *</label>
+                      <input
+                        type="text"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                        placeholder="City"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-3">State *</label>
+                      <input
+                        type="text"
+                        name="state"
+                        value={formData.state}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                        placeholder="State"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-3">PIN Code *</label>
+                      <input
+                        type="text"
+                        name="pincode"
+                        value={formData.pincode}
+                        onChange={handleInputChange}
+                        required
+                        pattern="[0-9]{6}"
+                        className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                        placeholder="PIN Code"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Course Selection & Training Information */}
               <div>
                 <div className="flex items-center mb-6">
                   <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mr-4">
                     <FaGraduationCap className="text-white text-sm" />
                   </div>
-                  <h3 className="text-3xl font-bold text-black">Course Selection</h3>
+                  <h3 className="text-3xl font-bold text-black">Training Information</h3>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -174,11 +450,17 @@ function Admission() {
                       <FaShieldAlt className="text-amber-500 mr-2" />
                       Training Level *
                     </label>
-                    <select className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
+                    <select 
+                      name="courseLevel"
+                      value={formData.courseLevel}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
                       <option value="">Select Your Level</option>
-                      <option value="beginner">Foundation Level (Beginner)</option>
-                      <option value="intermediate">Advanced Skills (Intermediate)</option>
-                      <option value="advanced">Master Level (Advanced)</option>
+                      <option value="beginner">Foundation Level (Beginner) - White to Yellow Belt</option>
+                      <option value="intermediate">Advanced Skills (Intermediate) - Green to Blue Belt</option>
+                      <option value="advanced">Master Level (Advanced) - Red to Black Belt</option>
+                      <option value="black-belt">Black Belt Training</option>
                     </select>
                   </div>
                   <div>
@@ -186,23 +468,83 @@ function Admission() {
                       <FaClock className="text-amber-500 mr-2" />
                       Preferred Schedule
                     </label>
-                    <select className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
+                    <select 
+                      name="preferredSchedule"
+                      value={formData.preferredSchedule}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
                       <option value="">Select Schedule</option>
                       <option value="morning">Morning Sessions (6:00 AM - 8:00 AM)</option>
                       <option value="evening">Evening Sessions (6:00 PM - 8:00 PM)</option>
                       <option value="weekend">Weekend Only (Sat-Sun)</option>
+                      <option value="flexible">Flexible (Any available time)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaStar className="text-amber-500 mr-2" />
+                      Training Goals
+                    </label>
+                    <select 
+                      name="trainingGoals"
+                      value={formData.trainingGoals}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
+                      <option value="">Select Primary Goal</option>
+                      <option value="fitness">Physical Fitness & Health</option>
+                      <option value="self-defense">Self Defense</option>
+                      <option value="discipline">Discipline & Character Building</option>
+                      <option value="competition">Competition Training</option>
+                      <option value="recreation">Recreation & Fun</option>
+                      <option value="belt-advancement">Belt Advancement</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaShieldAlt className="text-amber-500 mr-2" />
+                      Previous Martial Arts Experience
+                    </label>
+                    <select 
+                      name="previousMartialArts"
+                      value={formData.previousMartialArts}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
+                      <option value="">Select Experience Level</option>
+                      <option value="none">No Previous Experience</option>
+                      <option value="taekwondo">Previous Taekwon-Do Training</option>
+                      <option value="karate">Karate Experience</option>
+                      <option value="other-martial-arts">Other Martial Arts</option>
+                      <option value="multiple">Multiple Martial Arts</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaHeartbeat className="text-amber-500 mr-2" />
+                      Current Fitness Level
+                    </label>
+                    <select 
+                      name="fitnessLevel"
+                      value={formData.fitnessLevel}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
+                      <option value="">Select Fitness Level</option>
+                      <option value="excellent">Excellent - Very Active, Regular Exercise</option>
+                      <option value="good">Good - Moderately Active</option>
+                      <option value="average">Average - Some Physical Activity</option>
+                      <option value="below-average">Below Average - Limited Physical Activity</option>
+                      <option value="poor">Poor - Sedentary Lifestyle</option>
                     </select>
                   </div>
                 </div>
               </div>
 
-              {/* Emergency Contact */}
+              {/* Emergency Contact & Guardian Information */}
               <div>
                 <div className="flex items-center mb-6">
                   <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mr-4">
                     <FaPhone className="text-white text-sm" />
                   </div>
-                  <h3 className="text-3xl font-bold text-black">Emergency Contact</h3>
+                  <h3 className="text-3xl font-bold text-black">Emergency Contact & Guardian Information</h3>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -213,8 +555,12 @@ function Admission() {
                     </label>
                     <input
                       type="text"
+                      name="emergencyContactName"
+                      value={formData.emergencyContactName}
+                      onChange={handleInputChange}
+                      required
                       className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
-                      placeholder="Parent/Guardian name"
+                      placeholder="Emergency contact full name"
                     />
                   </div>
                   <div>
@@ -224,78 +570,238 @@ function Admission() {
                     </label>
                     <input
                       type="tel"
+                      name="emergencyContactPhone"
+                      value={formData.emergencyContactPhone}
+                      onChange={handleInputChange}
+                      required
                       className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
                       placeholder="+91 XXXXX XXXXX"
                     />
                   </div>
-                  <div className="md:col-span-2">
+                  <div>
                     <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
                       <FaUsers className="text-amber-500 mr-2" />
                       Relationship to Student *
                     </label>
-                    <select className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
+                    <select 
+                      name="relationshipToStudent"
+                      value={formData.relationshipToStudent}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
                       <option value="">Select Relationship</option>
                       <option value="parent">Parent</option>
-                      <option value="guardian">Guardian</option>
+                      <option value="guardian">Legal Guardian</option>
                       <option value="sibling">Sibling</option>
                       <option value="spouse">Spouse</option>
-                      <option value="other">Other</option>
+                      <option value="grandparent">Grandparent</option>
+                      <option value="other">Other Family Member</option>
+                      <option value="friend">Friend</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaMapMarkerAlt className="text-amber-500 mr-2" />
+                      Emergency Contact Address
+                    </label>
+                    <input
+                      type="text"
+                      name="emergencyContactAddress"
+                      value={formData.emergencyContactAddress}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                      placeholder="Emergency contact address (if different)"
+                    />
+                  </div>
+                  
+                  {/* Parent/Guardian Information for Minors */}
+                  <div className="md:col-span-2">
+                    <div className="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-500 mb-4">
+                      <p className="text-sm text-blue-700 font-medium">
+                        <FaUser className="inline mr-2" />
+                        For applicants under 18 years: Parent/Guardian information is required
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-3">
+                          Parent/Guardian Name
+                        </label>
+                        <input
+                          type="text"
+                          name="parentGuardianName"
+                          value={formData.parentGuardianName}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                          placeholder="Parent or guardian full name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-3">
+                          Parent/Guardian Phone
+                        </label>
+                        <input
+                          type="tel"
+                          name="parentGuardianPhone"
+                          value={formData.parentGuardianPhone}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                          placeholder="+91 XXXXX XXXXX"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Medical Information */}
+              {/* Medical & Health Information */}
               <div>
                 <div className="flex items-center mb-6">
                   <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mr-4">
                     <FaHeartbeat className="text-white text-sm" />
                   </div>
-                  <h3 className="text-3xl font-bold text-black">Medical Information</h3>
+                  <h3 className="text-3xl font-bold text-black">Medical & Health Information</h3>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
-                    <FaHeartbeat className="text-amber-500 mr-2" />
-                    Any Medical Conditions or Injuries (Optional)
-                  </label>
-                  <textarea
-                    rows="3"
-                    className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300 resize-none"
-                    placeholder="Please mention any medical conditions, injuries, or physical limitations we should be aware of"
-                  ></textarea>
+                <div className="space-y-6">
+                  <div className="bg-yellow-50 p-4 rounded-xl border-l-4 border-yellow-500 mb-6">
+                    <p className="text-sm text-yellow-700 font-medium">
+                      <FaHeartbeat className="inline mr-2" />
+                      Please provide any relevant medical information to ensure your safety during training
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                      <FaHeartbeat className="text-amber-500 mr-2" />
+                      Medical Information
+                    </label>
+                    <textarea
+                      name="medicalConditions"
+                      value={formData.medicalConditions}
+                      onChange={handleInputChange}
+                      rows="4"
+                      className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300 resize-none"
+                      placeholder="Please list any medical conditions, allergies, current medications, physical limitations, or other health information relevant to martial arts training (e.g., heart conditions, joint problems, previous injuries, medications, allergies, etc.)"
+                    ></textarea>
+                  </div>
                 </div>
               </div>
 
-              {/* Terms and Submit */}
+              {/* Additional Information */}
+              <div>
+                <div className="flex items-center mb-6">
+                  <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mr-4">
+                    <FaStar className="text-white text-sm" />
+                  </div>
+                  <h3 className="text-3xl font-bold text-black">Additional Information</h3>
+                </div>
+                
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                        <FaStar className="text-amber-500 mr-2" />
+                        How did you hear about us?
+                      </label>
+                      <select 
+                        name="howDidYouHear"
+                        value={formData.howDidYouHear}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
+                        <option value="">Select Source</option>
+                        <option value="google">Google Search</option>
+                        <option value="social-media">Social Media (Facebook, Instagram)</option>
+                        <option value="friend-referral">Friend/Family Referral</option>
+                        <option value="website">Academy Website</option>
+                        <option value="flyer">Flyer/Brochure</option>
+                        <option value="event">Community Event/Demo</option>
+                        <option value="school">School Program</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                        <FaCheckCircle className="text-amber-500 mr-2" />
+                        Special Requests or Notes
+                      </label>
+                      <textarea
+                        name="specialRequests"
+                        value={formData.specialRequests}
+                        onChange={handleInputChange}
+                        rows="4"
+                        className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300 resize-none"
+                        placeholder="Any special accommodations, questions, or additional information you'd like us to know"
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Terms and Agreements */}
               <div className="border-t-2 border-slate-200 pt-8">
-                <div className="flex items-start space-x-3 mb-8">
-                  <input
-                    type="checkbox"
-                    className="w-5 h-5 text-amber-500 border-2 border-slate-300 rounded focus:ring-amber-500 mt-1"
-                  />
-                  <label className="text-sm text-slate-600 leading-relaxed flex items-start">
-                    <FaCheckCircle className="text-green-500 mr-2 mt-1 flex-shrink-0" />
-                    I agree to the terms and conditions, understand the training requirements, 
-                    and acknowledge that martial arts training involves physical activity and inherent risks. 
-                    I consent to emergency medical treatment if necessary.
-                  </label>
+                <div className="flex items-center mb-6">
+                  <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mr-4">
+                    <FaCheckCircle className="text-white text-sm" />
+                  </div>
+                  <h3 className="text-3xl font-bold text-black">Terms & Agreements</h3>
+                </div>
+
+                <div className="space-y-6 mb-8">
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      name="agreeToTerms"
+                      checked={formData.agreeToTerms}
+                      onChange={handleInputChange}
+                      required
+                      className="w-5 h-5 text-amber-500 border-2 border-slate-300 rounded focus:ring-amber-500 mt-1"
+                    />
+                    <label className="text-sm text-slate-600 leading-relaxed flex items-start">
+                      <FaCheckCircle className="text-green-500 mr-2 mt-1 flex-shrink-0" />
+                      <span>
+                        <strong>Terms & Conditions (Required):</strong> I agree to the terms and conditions, understand the training requirements, 
+                        and acknowledge that martial arts training involves physical activity and inherent risks. 
+                        I consent to emergency medical treatment if necessary and understand the academy's policies regarding fees, attendance, and conduct.
+                      </span>
+                    </label>
+                  </div>
+
+
+                 
                 </div>
                 
                 <div className="text-center">
                   <button
                     type="submit"
-                    className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-12 py-4 rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transition-all duration-300 shadow-lg"
+                    disabled={isSubmitting}
+                    className={`px-12 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg transform hover:scale-105 ${
+                      isSubmitting 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 hover:shadow-xl'
+                    }`}
                   >
                     <span className="flex items-center justify-center">
-                      <FaPaperPlane className="mr-2" />
-                      <FaBolt className="mr-2" />
-                      Submit Application
+                      {isSubmitting ? (
+                        <>
+                          <FaSpinner className="mr-2 animate-spin" />
+                          Submitting Application...
+                        </>
+                      ) : (
+                        <>
+                          <FaPaperPlane className="mr-2" />
+                          <FaBolt className="mr-2" />
+                          Submit Application
+                        </>
+                      )}
                     </span>
                   </button>
                   <p className="text-sm text-slate-500 mt-4 flex items-center justify-center">
                     <FaClock className="mr-2 text-amber-500" />
-                    We'll contact you within 24 hours to confirm your application
+                    We'll review your application and contact you within 24-48 hours
+                  </p>
+                  <p className="text-xs text-slate-400 mt-2">
+                    By submitting this form, you confirm that all information provided is accurate and complete.
                   </p>
                 </div>
               </div>
