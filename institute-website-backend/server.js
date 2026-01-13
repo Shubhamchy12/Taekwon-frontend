@@ -18,6 +18,7 @@ const certificateRoutes = require('./routes/certificates');
 const achievementRoutes = require('./routes/achievements');
 const badgeRoutes = require('./routes/badges');
 const certificateTemplateRoutes = require('./routes/certificate-templates');
+const feeRoutes = require('./routes/fees');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -47,6 +48,12 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -55,7 +62,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static('uploads'));
 
 // Database connection
-if (process.env.MONGODB_URI && process.env.MONGODB_URI !== 'disabled') {
+if (process.env.MONGODB_URI) {
   mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
       console.log('✅ Connected to MongoDB');
@@ -63,194 +70,106 @@ if (process.env.MONGODB_URI && process.env.MONGODB_URI !== 'disabled') {
     })
     .catch((error) => {
       console.error('❌ MongoDB connection error:', error.message);
-      console.log('⚠️  Running without database - using mock data');
+      process.exit(1);
     });
 } else {
-  console.log('📝 Database disabled - running in mock mode');
+  console.error('❌ MONGODB_URI environment variable is required');
+  process.exit(1);
 }
 
-// Contact form submission endpoint
-app.post('/api/contact', async (req, res) => {
+// Contact routes are handled by the contact router below
+
+// Test students controller directly
+app.get('/api/students-test', async (req, res) => {
+  console.log('🧪 Direct students test called');
+  res.json({ 
+    status: 'success', 
+    message: 'Direct test working',
+    env: process.env.MONGODB_URI 
+  });
+});
+
+// Test fee creation endpoint
+app.get('/api/test-fee-creation', async (req, res) => {
   try {
-    const { name, email, phone, inquiryType, message, isSubscribed } = req.body;
-
-    // Basic validation
-    if (!name || !email || !inquiryType || !message) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Name, email, inquiry type, and message are required'
-      });
-    }
-
-    // Create contact object (in a real app, this would save to database)
-    const contact = {
-      _id: Date.now().toString(),
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      phone: phone?.trim() || '',
-      inquiryType,
-      message: message.trim(),
-      status: 'new',
-      priority: 'medium',
-      submittedAt: new Date().toISOString(),
-      adminNotes: '',
-      responseMessage: '',
-      isSubscribed: isSubscribed || false
+    const Fee = require('./models/Fee');
+    
+    console.log('Testing fee creation...');
+    
+    const testFeeData = {
+      studentName: 'Test Student Direct',
+      course: 'Beginner',
+      feeType: 'Monthly Fee',
+      amount: 2000,
+      dueDate: new Date('2025-02-15')
     };
-
-    // In a real application, you would save this to a database
-    // For now, we'll just log it and return success
-    console.log('New contact submission:', contact);
-
-    res.status(201).json({
-      status: 'success',
-      message: 'Message sent successfully. We will get back to you within 24 hours.',
-      data: {
-        contact: {
-          id: contact._id,
-          name: contact.name,
-          email: contact.email,
-          inquiryType: contact.inquiryType,
-          status: contact.status,
-          submittedAt: contact.submittedAt
-        }
-      }
+    
+    console.log('Creating fee with data:', testFeeData);
+    
+    const fee = new Fee(testFeeData);
+    await fee.save();
+    
+    console.log('Fee created successfully:', fee._id);
+    
+    res.json({ 
+      status: 'success', 
+      message: 'Fee created successfully',
+      feeId: fee._id,
+      data: fee
     });
-
   } catch (error) {
-    console.error('Contact submission error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Error sending message. Please try again.'
+    console.error('Test fee creation error:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Test fee creation failed',
+      error: error.message,
+      stack: error.stack
     });
   }
 });
 
-// Direct contact routes for testing
-app.get('/api/contact-stats', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    data: {
-      totalContacts: 3,
-      newContacts: 1,
-      inProgressContacts: 1,
-      resolvedContacts: 1,
-      thisMonthContacts: 2,
-      recentActivity: 1,
-      inquiryTypeBreakdown: [
-        { _id: 'admission', count: 1 },
-        { _id: 'trial', count: 1 },
-        { _id: 'fees', count: 1 }
-      ],
-      priorityBreakdown: [
-        { _id: 'high', count: 1 },
-        { _id: 'medium', count: 1 },
-        { _id: 'low', count: 1 }
-      ]
-    }
-  });
+// Test fee creation endpoint (temporary)
+app.get('/api/test-direct-fee', async (req, res) => {
+  try {
+    console.log('Direct fee test endpoint hit');
+    const Fee = require('./models/Fee');
+    
+    const testFeeData = {
+      studentName: 'Test Student API',
+      course: 'Beginner',
+      feeType: 'Monthly Fee',
+      amount: 1500,
+      dueDate: new Date('2025-02-20')
+    };
+    
+    console.log('Creating fee with data:', testFeeData);
+    
+    const fee = new Fee(testFeeData);
+    await fee.save();
+    
+    console.log('Fee created successfully:', fee._id);
+    
+    res.json({ 
+      status: 'success', 
+      message: 'Direct fee created successfully',
+      feeId: fee._id,
+      data: fee
+    });
+  } catch (error) {
+    console.error('Direct fee creation error:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Direct fee creation failed',
+      error: error.message,
+      stack: error.stack
+    });
+  }
 });
 
-app.get('/api/contact/admin/stats', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    data: {
-      totalContacts: 3,
-      newContacts: 1,
-      inProgressContacts: 1,
-      resolvedContacts: 1,
-      thisMonthContacts: 2,
-      recentActivity: 1,
-      inquiryTypeBreakdown: [
-        { _id: 'admission', count: 1 },
-        { _id: 'trial', count: 1 },
-        { _id: 'fees', count: 1 }
-      ],
-      priorityBreakdown: [
-        { _id: 'high', count: 1 },
-        { _id: 'medium', count: 1 },
-        { _id: 'low', count: 1 }
-      ]
-    }
-  });
-});
-
-app.get('/api/contact/admin', (req, res) => {
-  const mockContacts = [
-    {
-      _id: '1',
-      name: 'Rajesh Kumar',
-      email: 'rajesh.kumar@email.com',
-      phone: '+91 9876543210',
-      inquiryType: 'admission',
-      message: 'I want to enroll my son in Taekwon-Do classes. Please provide more information about the beginner courses.',
-      status: 'new',
-      priority: 'high',
-      submittedAt: '2024-01-15T10:30:00Z',
-      adminNotes: '',
-      responseMessage: ''
-    },
-    {
-      _id: '2',
-      name: 'Priya Sharma',
-      email: 'priya.sharma@email.com',
-      phone: '+91 9876543211',
-      inquiryType: 'trial',
-      message: 'Can I schedule a trial class for my daughter? She is 8 years old.',
-      status: 'in-progress',
-      priority: 'medium',
-      submittedAt: '2024-01-14T14:20:00Z',
-      adminNotes: 'Scheduled trial for next week',
-      responseMessage: ''
-    },
-    {
-      _id: '3',
-      name: 'Amit Patel',
-      email: 'amit.patel@email.com',
-      phone: '+91 9876543212',
-      inquiryType: 'fees',
-      message: 'What are the monthly fees for intermediate level classes?',
-      status: 'resolved',
-      priority: 'low',
-      submittedAt: '2024-01-13T09:15:00Z',
-      adminNotes: 'Fee information provided',
-      responseMessage: 'Thank you for your inquiry. Our intermediate level classes are ₹3000 per month.'
-    }
-  ];
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      contacts: mockContacts,
-      pagination: {
-        page: 1,
-        limit: 10,
-        total: mockContacts.length,
-        pages: 1
-      }
-    }
-  });
-});
-
-app.put('/api/contact/admin/:id', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'Contact updated successfully',
-    data: {
-      contact: {
-        _id: req.params.id,
-        ...req.body,
-        updatedAt: new Date()
-      }
-    }
-  });
-});
-
-app.delete('/api/contact/admin/:id', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'Contact deleted successfully'
-  });
+// Test endpoint
+app.get('/api/test-simple', (req, res) => {
+  console.log('Simple test endpoint hit');
+  res.json({ status: 'success', message: 'Simple test working' });
 });
 
 // Routes
@@ -265,6 +184,7 @@ app.use('/api/certificates', certificateRoutes);
 app.use('/api/achievements', achievementRoutes);
 app.use('/api/badges', badgeRoutes);
 app.use('/api/certificate-templates', certificateTemplateRoutes);
+app.use('/api/fees', feeRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -276,9 +196,63 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Test global endpoint
-app.get('/api/test-global', (req, res) => {
-  res.json({ status: 'success', message: 'Global route working' });
+// Test database connection
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const Course = require('./models/Course');
+    
+    // Try to create a very simple course
+    const testCourse = new Course({
+      name: 'DB Test Course',
+      level: 'beginner',
+      description: 'Testing database connection',
+      duration: {
+        months: 12,
+        sessionsPerWeek: 3,
+        sessionDuration: 45
+      },
+      fees: {
+        registrationFee: 500,
+        monthlyFee: 2500,
+        examFee: 200
+      },
+      curriculum: [{
+        week: 1,
+        topic: 'Test Topic',
+        objectives: ['Test objective'],
+        techniques: []
+      }],
+      ageGroup: {
+        min: 5,
+        max: 12
+      },
+      maxStudents: 20,
+      schedule: [{
+        day: 'monday',
+        startTime: '18:00',
+        endTime: '19:00'
+      }]
+    });
+
+    const savedCourse = await testCourse.save();
+    
+    // Count courses
+    const courseCount = await Course.countDocuments();
+    
+    res.json({ 
+      status: 'success', 
+      message: 'Database test successful',
+      courseId: savedCourse._id,
+      totalCourses: courseCount
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Database test failed',
+      error: error.message,
+      stack: error.stack
+    });
+  }
 });
 
 // Test contact endpoint directly in server.js

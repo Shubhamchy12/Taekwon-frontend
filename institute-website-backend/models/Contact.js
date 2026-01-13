@@ -15,7 +15,7 @@ const contactSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    match: [/^[+]?[1-9][\d]{0,15}$/, 'Please enter a valid phone number']
+    match: [/^[+]?[\d\s\-\(\)]{10,15}$/, 'Please enter a valid phone number']
   },
   inquiryType: {
     type: String,

@@ -9,13 +9,11 @@ const studentSchema = new mongoose.Schema({
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: 'User'
   },
   admissionId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Admission',
-    required: true
+    ref: 'Admission'
   },
   
   // Personal Details
@@ -276,6 +274,10 @@ studentSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
 });
+
+// Ensure virtual fields are included in JSON output
+studentSchema.set('toJSON', { virtuals: true });
+studentSchema.set('toObject', { virtuals: true });
 
 // Indexes
 studentSchema.index({ userId: 1 });

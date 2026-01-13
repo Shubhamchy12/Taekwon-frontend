@@ -12,14 +12,14 @@ const certificateSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    default: () => uuidv4().replace(/-/g, '').toUpperCase()
+    uppercase: true
   },
   
-  // Student Information
+  // Student Information (flexible - can be just name or linked to student record)
   studentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Student',
-    required: true
+    required: false // Made optional for manual entry
   },
   studentName: {
     type: String,
@@ -31,7 +31,7 @@ const certificateSchema = new mongoose.Schema({
   achievementType: {
     type: String,
     required: true,
-    enum: ['belt_promotion', 'course_completion', 'special_achievement']
+    enum: ['belt_promotion', 'course_completion', 'special_achievement', 'tournament_award', 'participation']
   },
   achievementDetails: {
     title: {
@@ -40,7 +40,7 @@ const certificateSchema = new mongoose.Schema({
     },
     description: {
       type: String,
-      required: true
+      required: false // Made optional
     },
     level: {
       type: String // Belt level, course level, etc.
@@ -60,11 +60,11 @@ const certificateSchema = new mongoose.Schema({
     }
   },
   
-  // Template and Generation Info
+  // Template and Generation Info (made optional for manual certificates)
   templateId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'CertificateTemplate',
-    required: true
+    required: false
   },
   issuedDate: {
     type: Date,
@@ -80,11 +80,11 @@ const certificateSchema = new mongoose.Schema({
   // File Information
   filePath: {
     type: String,
-    required: true
+    required: false // Made optional for cases where certificate is created without file initially
   },
   fileHash: {
     type: String,
-    required: true
+    required: false
   },
   
   // Status and Metadata
@@ -96,11 +96,12 @@ const certificateSchema = new mongoose.Schema({
   metadata: {
     templateVersion: {
       type: String,
-      required: true
+      default: '1.0'
     },
     generationMethod: {
       type: String,
-      default: 'automated'
+      enum: ['automated', 'manual'],
+      default: 'manual'
     },
     fileSize: {
       type: Number
@@ -116,6 +117,9 @@ const certificateSchema = new mongoose.Schema({
     downloadCount: {
       type: Number,
       default: 0
+    },
+    instructorName: {
+      type: String // Store instructor name for manual certificates
     }
   },
   
@@ -131,10 +135,13 @@ const certificateSchema = new mongoose.Schema({
 });
 
 // Indexes for performance
+certificateSchema.index({ verificationCode: 1 });
 certificateSchema.index({ studentId: 1 });
+certificateSchema.index({ studentName: 1 });
 certificateSchema.index({ achievementType: 1 });
 certificateSchema.index({ status: 1 });
 certificateSchema.index({ issuedDate: -1 });
+certificateSchema.index({ 'achievementDetails.examiner': 1 });
 
 // Update updatedAt before saving
 certificateSchema.pre('save', function(next) {
@@ -153,5 +160,17 @@ certificateSchema.methods.revoke = function() {
   this.status = 'revoked';
   return this.save();
 };
+
+// Virtual for getting image URL
+certificateSchema.virtual('imageUrl').get(function() {
+  if (this.filePath) {
+    return `/uploads/certificates/${require('path').basename(this.filePath)}`;
+  }
+  return null;
+});
+
+// Ensure virtual fields are serialized
+certificateSchema.set('toJSON', { virtuals: true });
+certificateSchema.set('toObject', { virtuals: true });
 
 module.exports = mongoose.model('Certificate', certificateSchema);

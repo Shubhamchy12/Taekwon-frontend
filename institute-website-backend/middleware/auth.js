@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 // Protect routes - verify JWT token
 const protect = async (req, res, next) => {
   console.log('🔐 Auth middleware called for:', req.method, req.path);
+  console.log('🔍 Headers:', req.headers.authorization ? 'Token present' : 'No token');
   try {
     let token;
 
@@ -22,61 +23,32 @@ const protect = async (req, res, next) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('Token decoded:', decoded.id);
+    console.log('✅ Token decoded:', decoded.id);
 
-    // Handle mock user (when database is disabled)
-    if (decoded.id === 'mock-admin-id') {
-      console.log('Mock admin authenticated successfully');
-      req.user = {
-        _id: 'mock-admin-id',
-        id: 'mock-admin-id',
-        name: 'Combat Warrior Admin',
-        email: 'admin@combatwarrior.com',
-        role: 'admin',
-        isActive: true
-      };
-      return next();
-    }
-
-    // If database is disabled, only allow mock users
-    if (process.env.MONGODB_URI === 'disabled') {
+    // Get user from token
+    const User = require('../models/User');
+    const user = await User.findById(decoded.id).select('-password');
+    
+    if (!user) {
       return res.status(401).json({
         status: 'error',
-        message: 'Database unavailable. Only mock admin login allowed.'
+        message: 'Token is invalid. User not found.'
       });
     }
 
-    // Get user from token (database mode)
-    try {
-      const User = require('../models/User');
-      const user = await User.findById(decoded.id).select('-password');
-      
-      if (!user) {
-        return res.status(401).json({
-          status: 'error',
-          message: 'Token is invalid. User not found.'
-        });
-      }
-
-      if (!user.isActive) {
-        return res.status(401).json({
-          status: 'error',
-          message: 'User account is deactivated.'
-        });
-      }
-
-      req.user = user;
-      next();
-    } catch (dbError) {
-      console.error('Database error in auth middleware:', dbError);
-      return res.status(500).json({
+    if (!user.isActive) {
+      return res.status(401).json({
         status: 'error',
-        message: 'Database error during authentication.'
+        message: 'User account is deactivated.'
       });
     }
+
+    req.user = user;
+    console.log('➡️ Proceeding to next middleware');
+    next();
 
   } catch (error) {
-    console.error('Auth middleware error:', error.message, error.stack);
+    console.error('❌ Auth middleware error:', error.message);
     
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({

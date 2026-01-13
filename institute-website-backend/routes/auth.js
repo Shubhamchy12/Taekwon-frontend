@@ -72,63 +72,8 @@ router.post('/login', validateUserLogin, async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // If database is disabled, only allow mock admin login
-    if (process.env.MONGODB_URI === 'disabled') {
-      if (email === 'admin@combatwarrior.com' && password === 'admin123') {
-        const token = generateToken('mock-admin-id');
-        
-        return res.status(200).json({
-          status: 'success',
-          message: 'Login successful (Mock Mode)',
-          data: {
-            user: {
-              id: 'mock-admin-id',
-              name: 'Combat Warrior Admin',
-              email: 'admin@combatwarrior.com',
-              phone: '+91 9019157225',
-              role: 'admin',
-              lastLogin: new Date()
-            },
-            token
-          }
-        });
-      } else {
-        return res.status(401).json({
-          status: 'error',
-          message: 'Invalid credentials. Use admin@combatwarrior.com / admin123 for demo.'
-        });
-      }
-    }
-
-    // Check for mock admin login first (for development without DB)
-    if (email === 'admin@combatwarrior.com' && password === 'admin123') {
-      const token = generateToken('mock-admin-id');
-      
-      return res.status(200).json({
-        status: 'success',
-        message: 'Login successful (Mock Mode)',
-        data: {
-          user: {
-            id: 'mock-admin-id',
-            name: 'Combat Warrior Admin',
-            email: 'admin@combatwarrior.com',
-            phone: '+91 9019157225',
-            role: 'admin',
-            lastLogin: new Date()
-          },
-          token
-        }
-      });
-    }
-
-    // Try database login with timeout
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Database timeout')), 5000);
-    });
-
-    const dbPromise = User.findOne({ email }).select('+password');
-    
-    const user = await Promise.race([dbPromise, timeoutPromise]);
+    // Get user from database
+    const user = await User.findOne({ email }).select('+password');
     
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({
@@ -168,32 +113,9 @@ router.post('/login', validateUserLogin, async (req, res) => {
 
   } catch (error) {
     console.error('Login error:', error);
-    
-    // If any error (including database timeout), try mock login as fallback
-    const { email, password } = req.body;
-    if (email === 'admin@combatwarrior.com' && password === 'admin123') {
-      const token = generateToken('mock-admin-id');
-      
-      return res.status(200).json({
-        status: 'success',
-        message: 'Login successful (Mock Mode - DB Unavailable)',
-        data: {
-          user: {
-            id: 'mock-admin-id',
-            name: 'Combat Warrior Admin',
-            email: 'admin@combatwarrior.com',
-            phone: '+91 9019157225',
-            role: 'admin',
-            lastLogin: new Date()
-          },
-          token
-        }
-      });
-    }
-    
     res.status(401).json({
       status: 'error',
-      message: 'Invalid credentials or database unavailable'
+      message: 'Invalid credentials or server error'
     });
   }
 });

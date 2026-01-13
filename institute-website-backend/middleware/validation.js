@@ -4,6 +4,8 @@ const { body, validationResult } = require('express-validator');
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.log('Validation errors:', errors.array());
+    console.log('Request body:', req.body);
     return res.status(400).json({
       status: 'error',
       message: 'Validation failed',
@@ -112,8 +114,8 @@ const validateContact = [
     .withMessage('Please provide a valid email'),
   
   body('phone')
-    .optional()
-    .isMobilePhone()
+    .optional({ checkFalsy: true })
+    .matches(/^[+]?[\d\s\-\(\)]{10,15}$/)
     .withMessage('Please provide a valid phone number'),
   
   body('inquiryType')

@@ -57,58 +57,16 @@ const getAllContacts = async (req, res) => {
   try {
     // Check if database is available
     if (!process.env.MONGODB_URI || process.env.MONGODB_URI === 'disabled') {
-      // Return mock data when database is disabled
-      const mockContacts = [
-        {
-          _id: '1',
-          name: 'Rajesh Kumar',
-          email: 'rajesh.kumar@email.com',
-          phone: '+91 9876543210',
-          inquiryType: 'admission',
-          message: 'I want to enroll my son in Taekwon-Do classes. Please provide more information about the beginner courses.',
-          status: 'new',
-          priority: 'high',
-          submittedAt: new Date('2024-01-15T10:30:00Z'),
-          adminNotes: '',
-          responseMessage: ''
-        },
-        {
-          _id: '2',
-          name: 'Priya Sharma',
-          email: 'priya.sharma@email.com',
-          phone: '+91 9876543211',
-          inquiryType: 'trial',
-          message: 'Can I schedule a trial class for my daughter? She is 8 years old.',
-          status: 'in-progress',
-          priority: 'medium',
-          submittedAt: new Date('2024-01-14T14:20:00Z'),
-          adminNotes: 'Scheduled trial for next week',
-          responseMessage: ''
-        },
-        {
-          _id: '3',
-          name: 'Amit Patel',
-          email: 'amit.patel@email.com',
-          phone: '+91 9876543212',
-          inquiryType: 'fees',
-          message: 'What are the monthly fees for intermediate level classes?',
-          status: 'resolved',
-          priority: 'low',
-          submittedAt: new Date('2024-01-13T09:15:00Z'),
-          adminNotes: 'Fee information provided',
-          responseMessage: 'Thank you for your inquiry. Our intermediate level classes are ₹3000 per month.'
-        }
-      ];
-
+      // Return empty data when database is disabled
       return res.status(200).json({
         status: 'success',
         data: {
-          contacts: mockContacts,
+          contacts: [],
           pagination: {
             page: 1,
             limit: 10,
-            total: mockContacts.length,
-            pages: 1
+            total: 0,
+            pages: 0
           }
         }
       });

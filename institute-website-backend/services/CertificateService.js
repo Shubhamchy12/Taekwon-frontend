@@ -155,7 +155,7 @@ class CertificateService {
       const certificate = await Certificate.findOne({ 
         verificationCode: verificationCode.toUpperCase(),
         status: 'active'
-      }).populate('studentId', 'fullName');
+      });
 
       if (!certificate) {
         return {
@@ -168,12 +168,14 @@ class CertificateService {
       return {
         isValid: true,
         certificate: {
+          id: certificate._id,
           studentName: certificate.studentName,
           achievementType: certificate.achievementType,
           achievementDetails: certificate.achievementDetails,
           issuedDate: certificate.issuedDate,
           verificationCode: certificate.verificationCode,
-          status: certificate.status
+          status: certificate.status,
+          hasFile: !!certificate.filePath
         }
       };
     } catch (error) {
@@ -232,21 +234,26 @@ class CertificateService {
       {
         $group: {
           _id: '$achievementType',
-          count: { $sum: 1 },
-          activeCount: {
-            $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] }
-          }
+          count: { $sum: 1 }
         }
       }
     ]);
 
     const totalCertificates = await Certificate.countDocuments();
     const activeCertificates = await Certificate.countDocuments({ status: 'active' });
+    const revokedCertificates = await Certificate.countDocuments({ status: 'revoked' });
+
+    // Convert stats array to object for easier access
+    const byType = {};
+    stats.forEach(stat => {
+      byType[stat._id] = stat.count;
+    });
 
     return {
-      total: totalCertificates,
-      active: activeCertificates,
-      byType: stats
+      totalCertificates,
+      activeCertificates,
+      revokedCertificates,
+      byType
     };
   }
 }
