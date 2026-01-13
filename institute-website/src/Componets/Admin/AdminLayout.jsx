@@ -59,8 +59,7 @@ function AdminLayout() {
     {
       title: 'Financial Management',
       items: [
-        { path: '/admin/fees', name: 'Fee Setup & Tracking', icon: '💰'},
-       
+        { path: '/admin/fees', name: 'Fee Setup & Tracking', icon: '💰'}
       ]
     },
     {

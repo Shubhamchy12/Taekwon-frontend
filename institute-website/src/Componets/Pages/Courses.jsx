@@ -1,9 +1,9 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import img1 from '../../assets/img1.jpg';
 import { 
   FaFistRaised, 
   FaTrophy, 
-  FaBullseye, 
   FaBolt, 
   FaShieldAlt, 
   FaUsers, 
@@ -15,108 +15,84 @@ import {
   FaGraduationCap,
   FaFire,
   FaStar,
-  FaHeart
+  FaHeart,
+  FaSpinner
 } from 'react-icons/fa';
 
 function Courses() {
-  const programs = [
-    {
-      title: 'Little Warriors',
-      ageGroup: '4-7 Years',
-      duration: '45 Minutes',
-      schedule: 'Mon, Wed, Fri - 4:00 PM',
-      price: '₹2,500/month',
-      description: 'Fun introduction to martial arts focusing on basic movements, coordination, and discipline.',
-      features: [
-        'Basic stances and movements',
-        'Simple self-defense techniques',
-        'Character development',
-        'Coordination and balance',
-        'Fun games and activities'
-      ],
-      color: 'from-yellow-400 to-orange-500'
-    },
-    {
-      title: 'Junior Program',
-      ageGroup: '8-12 Years',
-      duration: '60 Minutes',
-      schedule: 'Tue, Thu, Sat - 5:00 PM',
-      price: '₹3,000/month',
-      description: 'Structured learning of fundamental Taekwon-Do techniques, forms, and basic sparring.',
-      features: [
-        'ITF patterns (Tul)',
-        'Fundamental techniques',
-        'Basic sparring',
-        'Breaking techniques',
-        'Belt progression system'
-      ],
-      color: 'from-blue-400 to-blue-600'
-    },
-    {
-      title: 'Teen Program',
-      ageGroup: '13-17 Years',
-      duration: '75 Minutes',
-      schedule: 'Mon-Sat - 6:00 PM',
-      price: '₹3,500/month',
-      description: 'Advanced techniques, competitive training, and leadership development for teenagers.',
-      features: [
-        'Advanced patterns',
-        'Competition sparring',
-        'Self-defense applications',
-        'Leadership training',
-        'Tournament preparation'
-      ],
-      color: 'from-green-400 to-green-600'
-    },
-    {
-      title: 'Adult Program',
-      ageGroup: '18+ Years',
-      duration: '90 Minutes',
-      schedule: 'Mon-Sat - 7:30 PM',
-      price: '₹4,000/month',
-      description: 'Comprehensive training for adults focusing on fitness, self-defense, and traditional Taekwon-Do.',
-      features: [
-        'Complete ITF curriculum',
-        'Advanced self-defense',
-        'Fitness and conditioning',
-        'Stress relief',
-        'Black belt training'
-      ],
-      color: 'from-red-400 to-red-600'
-    },
-    {
-      title: 'Competition Team',
-      ageGroup: 'All Ages',
-      duration: '2 Hours',
-      schedule: 'Sat-Sun - 9:00 AM',
-      price: '₹5,000/month',
-      description: 'Elite training for students preparing for state, national, and international competitions.',
-      features: [
-        'Advanced sparring techniques',
-        'Competition strategies',
-        'Mental preparation',
-        'Individual coaching',
-        'Tournament participation'
-      ],
-      color: 'from-purple-400 to-purple-600'
-    },
-    {
-      title: 'Women\'s Self-Defense',
-      ageGroup: '16+ Years',
-      duration: '60 Minutes',
-      schedule: 'Tue, Thu - 10:00 AM',
-      price: '₹2,800/month',
-      description: 'Specialized program focusing on practical self-defense techniques for women.',
-      features: [
-        'Situational awareness',
-        'Escape techniques',
-        'Pressure point attacks',
-        'Confidence building',
-        'Real-world scenarios'
-      ],
-      color: 'from-pink-400 to-rose-500'
+  const [programs, setPrograms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // API base URL
+  const API_BASE_URL = 'http://localhost:5000/api';
+
+  // Fetch courses from backend
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/courses?isActive=true`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch courses');
+      }
+
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        // Transform backend data to match frontend format
+        const transformedCourses = data.data.courses.map((course, index) => ({
+          id: course.id,
+          title: course.title,
+          ageGroup: course.ageGroup,
+          duration: course.duration,
+          schedule: course.schedule,
+          price: `₹${course.price.toLocaleString()}/month`,
+          description: course.description,
+          features: course.features || [],
+          color: getColorForIndex(index),
+          category: course.category,
+          maxStudents: course.maxStudents,
+          currentStudents: course.currentStudents,
+          instructor: course.instructor,
+          status: course.status
+        }));
+        
+        setPrograms(transformedCourses);
+      }
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      setError('Failed to load courses. Please try again later.');
+      setPrograms([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  // Get color gradient for course cards based on index
+  const getColorForIndex = (index) => {
+    const colors = [
+      'from-yellow-400 to-orange-500',
+      'from-blue-400 to-blue-600',
+      'from-green-400 to-green-600',
+      'from-red-400 to-red-600',
+      'from-purple-400 to-purple-600',
+      'from-pink-400 to-rose-500'
+    ];
+    return colors[index % colors.length];
+  };
+
+  // Load courses on component mount
+  useEffect(() => {
+    fetchCourses();
+  }, []);
 
   const belts = [
     { name: 'White Belt', requirements: 'Basic stances, blocks, and kicks', duration: '2-3 months' },
@@ -155,99 +131,159 @@ function Courses() {
         </div>
       </section>
 
-      {/* Programs Grid */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {programs.map((program, index) => (
-              <div 
-                key={index} 
-                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-500 transform hover:scale-105 hover:rotate-1 group"
-                style={{
-                  transform: `rotateX(${5 + index * 2}deg) rotateY(${2 + index}deg)`,
-                  transformStyle: 'preserve-3d',
-                  animation: `float-${index % 3} 3s ease-in-out infinite`
-                }}
+      {/* Loading State */}
+      {loading && (
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-center">
+              <FaSpinner className="animate-spin text-4xl text-red-600 mr-4" />
+              <span className="text-xl text-gray-600">Loading courses...</span>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <div className="text-red-600 text-xl mb-4">{error}</div>
+              <button
+                onClick={fetchCourses}
+                className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
               >
-                <div className={`h-2 bg-gradient-to-r ${program.color} group-hover:h-4 transition-all duration-300`}></div>
-                <div className="p-8 transform group-hover:translate-z-4">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center mr-3 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
-                        {index === 0 && <FaUsers className="w-6 h-6 text-white" />}
-                        {index === 1 && <FaGraduationCap className="w-6 h-6 text-white" />}
-                        {index === 2 && <FaFire className="w-6 h-6 text-white" />}
-                        {index === 3 && <FaFistRaised className="w-6 h-6 text-white" />}
-                        {index === 4 && <FaTrophy className="w-6 h-6 text-white" />}
-                        {index === 5 && <FaShieldAlt className="w-6 h-6 text-white" />}
-                      </div>
-                      <h3 className="text-3xl font-bold text-black">{program.title}</h3>
-                    </div>
-                    <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold transform group-hover:scale-110 transition-transform duration-300">
-                      {program.ageGroup}
-                    </span>
-                  </div>
-                  
-                  <p className="text-base text-gray-700 mb-6">{program.description}</p>
-                  
-                  <div className="space-y-3 mb-6">
-                    <div className="flex justify-between items-center group/item hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200">
-                      <div className="flex items-center">
-                        <FaClock className="text-amber-500 mr-2 group-hover/item:animate-spin" />
-                        <span className="text-base text-gray-700">Duration:</span>
-                      </div>
-                      <span className="font-semibold text-black">{program.duration}</span>
-                    </div>
-                    <div className="flex justify-between items-center group/item hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200">
-                      <div className="flex items-center">
-                        <FaCalendarAlt className="text-amber-500 mr-2 group-hover/item:animate-pulse" />
-                        <span className="text-base text-gray-700">Schedule:</span>
-                      </div>
-                      <span className="font-semibold text-black text-sm">{program.schedule}</span>
-                    </div>
-                    <div className="flex justify-between items-center group/item hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200">
-                      <div className="flex items-center">
-                        <FaRupeeSign className="text-amber-500 mr-2 group-hover/item:animate-bounce" />
-                        <span className="text-base text-gray-700">Price:</span>
-                      </div>
-                      <span className="font-bold text-red-600">{program.price}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <h4 className="font-semibold text-black mb-3 flex items-center">
-                      <FaStar className="text-yellow-500 mr-2" />
-                      What You'll Learn:
-                    </h4>
-                    <ul className="space-y-2">
-                      {program.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-center text-sm text-gray-700 group/feature hover:text-black transition-colors duration-200">
-                          <FaCheckCircle className="w-4 h-4 text-green-500 mr-2 group-hover/feature:animate-pulse" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <Link
-                    to="/admission"
-                    className="block w-full text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-lg font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-500 transform hover:scale-105 hover:rotate-1 shadow-lg group-hover:shadow-xl"
+                Try Again
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Programs Grid */}
+      {!loading && !error && (
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Section Title */}
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                Our <span className="text-red-600">Programs</span>
+              </h2>
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                Choose from our comprehensive range of Taekwon-Do programs designed for all ages and skill levels. 
+                Each program is carefully structured to provide the best learning experience.
+              </p>
+            </div>
+
+            {programs.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-gray-500 text-lg">No courses available at the moment</div>
+                <p className="text-gray-400 mt-2">Please check back later or contact us for more information</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {programs.map((program, index) => (
+                  <div 
+                    key={program.id || index} 
+                    className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-500 transform hover:scale-105 hover:rotate-1 group"
                     style={{
-                      transform: 'rotateX(5deg)',
-                      transformStyle: 'preserve-3d'
+                      transform: `rotateX(${5 + index * 2}deg) rotateY(${2 + index}deg)`,
+                      transformStyle: 'preserve-3d',
+                      animation: `float-${index % 3} 3s ease-in-out infinite`
                     }}
                   >
-                    <span className="flex items-center justify-center">
-                      <FaBolt className="mr-2 group-hover:animate-bounce" />
-                      Enroll Now
-                    </span>
-                  </Link>
-                </div>
+                    <div className={`h-2 bg-gradient-to-r ${program.color} group-hover:h-4 transition-all duration-300`}></div>
+                    <div className="p-8 transform group-hover:translate-z-4">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center">
+                          <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center mr-3 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
+                            {index === 0 && <FaUsers className="w-6 h-6 text-white" />}
+                            {index === 1 && <FaGraduationCap className="w-6 h-6 text-white" />}
+                            {index === 2 && <FaFire className="w-6 h-6 text-white" />}
+                            {index === 3 && <FaFistRaised className="w-6 h-6 text-white" />}
+                            {index === 4 && <FaTrophy className="w-6 h-6 text-white" />}
+                            {index === 5 && <FaShieldAlt className="w-6 h-6 text-white" />}
+                          </div>
+                          <h3 className="text-3xl font-bold text-black">{program.title}</h3>
+                        </div>
+                        <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold transform group-hover:scale-110 transition-transform duration-300">
+                          {program.ageGroup}
+                        </span>
+                      </div>
+                      
+                      <p className="text-base text-gray-700 mb-6">{program.description}</p>
+                      
+                      <div className="space-y-3 mb-6">
+                        <div className="flex justify-between items-center group/item hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200">
+                          <div className="flex items-center">
+                            <FaClock className="text-amber-500 mr-2 group-hover/item:animate-spin" />
+                            <span className="text-base text-gray-700">Duration:</span>
+                          </div>
+                          <span className="font-semibold text-black">{program.duration}</span>
+                        </div>
+                        <div className="flex justify-between items-center group/item hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200">
+                          <div className="flex items-center">
+                            <FaCalendarAlt className="text-amber-500 mr-2 group-hover/item:animate-pulse" />
+                            <span className="text-base text-gray-700">Schedule:</span>
+                          </div>
+                          <span className="font-semibold text-black text-sm">{program.schedule}</span>
+                        </div>
+                        <div className="flex justify-between items-center group/item hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200">
+                          <div className="flex items-center">
+                            <FaRupeeSign className="text-amber-500 mr-2 group-hover/item:animate-bounce" />
+                            <span className="text-base text-gray-700">Price:</span>
+                          </div>
+                          <span className="font-bold text-red-600">{program.price}</span>
+                        </div>
+                        {program.currentStudents !== undefined && program.maxStudents && (
+                          <div className="flex justify-between items-center group/item hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200">
+                            <div className="flex items-center">
+                              <FaUsers className="text-amber-500 mr-2" />
+                              <span className="text-base text-gray-700">Enrollment:</span>
+                            </div>
+                            <span className="font-semibold text-black text-sm">
+                              {program.currentStudents}/{program.maxStudents}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="mb-6">
+                        <h4 className="font-semibold text-black mb-3 flex items-center">
+                          <FaStar className="text-yellow-500 mr-2" />
+                          What You'll Learn:
+                        </h4>
+                        <ul className="space-y-2">
+                          {program.features.map((feature, idx) => (
+                            <li key={idx} className="flex items-center text-sm text-gray-700 group/feature hover:text-black transition-colors duration-200">
+                              <FaCheckCircle className="w-4 h-4 text-green-500 mr-2 group-hover/feature:animate-pulse" />
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <Link
+                        to="/admission"
+                        className="block w-full text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-lg font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-500 transform hover:scale-105 hover:rotate-1 shadow-lg group-hover:shadow-xl"
+                        style={{
+                          transform: 'rotateX(5deg)',
+                          transformStyle: 'preserve-3d'
+                        }}
+                      >
+                        <span className="flex items-center justify-center">
+                          <FaBolt className="mr-2 group-hover:animate-bounce" />
+                          Enroll Now
+                        </span>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Belt System */}
       <section className="py-12 bg-gradient-to-r from-yellow-50 to-red-50">

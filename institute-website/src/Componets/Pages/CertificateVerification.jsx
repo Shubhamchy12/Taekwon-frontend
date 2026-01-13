@@ -30,7 +30,8 @@ const CertificateVerification = () => {
         verificationCode: code.trim().toUpperCase()
       });
 
-      setVerificationResult(response.data);
+      // Extract the data from the response
+      setVerificationResult(response.data.data);
     } catch (error) {
       console.error('Verification failed:', error);
       setError(error.response?.data?.message || 'Verification failed. Please check the code and try again.');
@@ -59,6 +60,56 @@ const CertificateVerification = () => {
       'special_achievement': 'Special Achievement'
     };
     return typeMap[type] || type;
+  };
+
+  const handleViewCertificate = async (certificateId) => {
+    try {
+      // Public route - no authentication needed
+      const response = await axios.get(`/api/certificates/${certificateId}`);
+      if (response.data.status === 'success' && response.data.data.certificate.imageUrl) {
+        // Open certificate image in a new window
+        const imageUrl = response.data.data.certificate.imageUrl;
+        window.open(imageUrl, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+      } else {
+        setError('Certificate image not available for viewing');
+      }
+    } catch (error) {
+      console.error('Error viewing certificate:', error);
+      setError('Failed to load certificate for viewing');
+    }
+  };
+
+  const handleDownloadCertificate = async (certificateId) => {
+    try {
+      // Public route - no authentication needed
+      const response = await axios.get(`/api/certificates/${certificateId}/download`, {
+        responseType: 'blob'
+      });
+      
+      // Create blob link to download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Get filename from response headers or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'certificate.pdf';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+      setError('Failed to download certificate');
+    }
   };
 
   return (
@@ -209,6 +260,34 @@ const CertificateVerification = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Certificate Actions */}
+                  {verificationResult.certificate.hasFile && (
+                    <div className="mt-8 pt-6 border-t border-gray-200">
+                      <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">Certificate Actions</h4>
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          onClick={() => handleViewCertificate(verificationResult.certificate.id)}
+                          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          View Certificate
+                        </button>
+                        <button
+                          onClick={() => handleDownloadCertificate(verificationResult.certificate.id)}
+                          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          Download Certificate
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Institute Information */}

@@ -13,33 +13,9 @@ const ContactManagement = () => {
     limit: 10
   });
 
-  // Load contacts from localStorage
+  // Load contacts from database
   useEffect(() => {
-    const loadContacts = () => {
-      try {
-        const storedContacts = JSON.parse(localStorage.getItem('contacts') || '[]');
-        setContacts(storedContacts);
-        
-        // Calculate stats
-        const totalContacts = storedContacts.length;
-        const recentActivity = storedContacts.filter(contact => {
-          const submittedDate = new Date(contact.submittedAt);
-          const weekAgo = new Date();
-          weekAgo.setDate(weekAgo.getDate() - 7);
-          return submittedDate >= weekAgo;
-        }).length;
-        
-        setStats({ totalContacts, recentActivity });
-        setLoading(false);
-      } catch (error) {
-        console.error('Error loading contacts:', error);
-        setContacts([]);
-        setStats({ totalContacts: 0, recentActivity: 0 });
-        setLoading(false);
-      }
-    };
-
-    loadContacts();
+    fetchContactsFromDatabase();
   }, []);
 
   // Filter contacts based on current filters
@@ -55,15 +31,52 @@ const ContactManagement = () => {
 
   // Handle contact delete
   const handleDeleteContact = async (id) => {
-    if (window.confirm('Are you sure you want to delete this contact?')) {
+    if (window.confirm('Are you sure you want to permanently delete this contact? This action cannot be undone and will remove the contact from the database forever.')) {
       try {
-        const updatedContacts = contacts.filter(contact => contact._id !== id);
-        setContacts(updatedContacts);
-        localStorage.setItem('contacts', JSON.stringify(updatedContacts));
+        const response = await fetch(`http://localhost:5000/api/contact/admin/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          // Refresh contacts from database
+          await fetchContactsFromDatabase();
+          alert('Contact permanently deleted from database!');
+        } else {
+          throw new Error('Failed to delete contact');
+        }
+      } catch (err) {
+        console.error('Error deleting contact:', err);
+        alert('Error deleting contact. Please try again.');
+      }
+    }
+  };
+
+  // Helper function to fetch contacts from database
+  const fetchContactsFromDatabase = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5000/api/contact/admin', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch contacts');
+      }
+
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        setContacts(data.data.contacts);
         
-        // Update stats
-        const totalContacts = updatedContacts.length;
-        const recentActivity = updatedContacts.filter(contact => {
+        // Calculate stats from fetched data
+        const totalContacts = data.data.contacts.length;
+        const recentActivity = data.data.contacts.filter(contact => {
           const submittedDate = new Date(contact.submittedAt);
           const weekAgo = new Date();
           weekAgo.setDate(weekAgo.getDate() - 7);
@@ -71,9 +84,14 @@ const ContactManagement = () => {
         }).length;
         
         setStats({ totalContacts, recentActivity });
-      } catch (err) {
-        console.error('Error deleting contact:', err);
       }
+    } catch (error) {
+      console.error('Error fetching contacts:', error);
+      setContacts([]);
+      setStats({ totalContacts: 0, recentActivity: 0 });
+      alert('Error fetching contacts. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 

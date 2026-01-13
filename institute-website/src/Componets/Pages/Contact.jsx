@@ -43,46 +43,70 @@ function Contact() {
       return;
     }
 
+    // Message length validation
+    if (formData.message.trim().length < 10) {
+      setSubmitStatus({
+        type: 'error',
+        message: 'Message must be at least 10 characters long.'
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitStatus(null);
 
     try {
-      // Create contact object
-      const newContact = {
-        _id: Date.now().toString(),
-        ...formData,
-        submittedAt: new Date().toISOString()
-      };
-      
-      // Get existing contacts from localStorage
-      const existingContacts = JSON.parse(localStorage.getItem('contacts') || '[]');
-      
-      // Add new contact to the beginning of the array
-      const updatedContacts = [newContact, ...existingContacts];
-      
-      // Save to localStorage
-      localStorage.setItem('contacts', JSON.stringify(updatedContacts));
-      
-      console.log('Contact added successfully:', newContact);
+      // Send to backend API
+      const response = await fetch('http://localhost:5000/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
 
-      setSubmitStatus({
-        type: 'success',
-        message: 'Message sent successfully! We will get back to you within 24 hours.'
-      });
+      if (!response.ok) {
+        // Try to parse error response
+        const errorData = await response.json().catch(() => null);
+        if (errorData && errorData.errors && errorData.errors.length > 0) {
+          // Show first validation error
+          throw new Error(errorData.errors[0].msg || 'Validation failed');
+        }
+        throw new Error('Failed to send message');
+      }
+
+      const data = await response.json();
       
-      // Reset form
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        inquiryType: '',
-        message: ''
-      });
+      if (data.status === 'success') {
+        setSubmitStatus({
+          type: 'success',
+          message: 'Message sent successfully! We will get back to you within 24 hours.'
+        });
+        
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          inquiryType: '',
+          message: ''
+        });
+      } else {
+        throw new Error(data.message || 'Failed to send message');
+      }
     } catch (error) {
       console.error('Contact form submission error:', error);
+      
+      // Try to get specific error message from response
+      let errorMessage = 'Error sending message. Please try again.';
+      
+      if (error.message && error.message.includes('Failed to fetch')) {
+        errorMessage = 'Unable to connect to server. Please check your connection and try again.';
+      }
+      
       setSubmitStatus({
         type: 'error',
-        message: 'Error sending message. Please try again.'
+        message: errorMessage
       });
     } finally {
       setIsSubmitting(false);
@@ -263,7 +287,7 @@ function Contact() {
 
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Message *
+                    Message * (minimum 10 characters)
                   </label>
                   <textarea
                     name="message"
@@ -272,8 +296,11 @@ function Contact() {
                     required
                     rows="4"
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300 resize-none"
-                    placeholder="Tell us about your interest in Taekwon-do..."
+                    placeholder="Tell us about your interest in Taekwon-do... (minimum 10 characters)"
                   ></textarea>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {formData.message.length}/2000 characters {formData.message.length < 10 && formData.message.length > 0 && '(minimum 10 required)'}
+                  </div>
                 </div>
 
                 <button

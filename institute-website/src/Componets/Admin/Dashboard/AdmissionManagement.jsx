@@ -117,30 +117,49 @@ function AdmissionManagement() {
     }
   };
 
-  const handleDeleteAdmission = (admissionId) => {
-    if (window.confirm('Are you sure you want to delete this admission application?')) {
+  const handleDeleteAdmission = async (admissionId) => {
+    if (window.confirm('Are you sure you want to permanently delete this admission application? This action cannot be undone and will remove the application from the database forever.')) {
       try {
-        const updatedAdmissions = admissions.filter(admission => admission._id !== admissionId);
-        setAdmissions(updatedAdmissions);
-        localStorage.setItem('admissions', JSON.stringify(updatedAdmissions));
-        
-        // Update stats
-        const totalApplications = updatedAdmissions.length;
-        const pendingApplications = updatedAdmissions.filter(admission => admission.status === 'pending').length;
-        const approvedApplications = updatedAdmissions.filter(admission => admission.status === 'approved').length;
-        
-        const thisMonth = new Date();
-        thisMonth.setDate(1);
-        thisMonth.setHours(0, 0, 0, 0);
-        
-        const thisMonthApplications = updatedAdmissions.filter(admission => {
-          const submittedDate = new Date(admission.submittedAt);
-          return submittedDate >= thisMonth;
-        }).length;
-        
-        setStats({ totalApplications, pendingApplications, approvedApplications, thisMonthApplications });
-      } catch (error) {
-        console.error('Error deleting admission:', error);
+        const response = await fetch(`http://localhost:5000/api/admin/admissions/${admissionId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          // Remove from local state
+          const updatedAdmissions = admissions.filter(admission => admission._id !== admissionId);
+          setAdmissions(updatedAdmissions);
+          
+          // Update stats
+          const totalApplications = updatedAdmissions.length;
+          const pendingApplications = updatedAdmissions.filter(admission => admission.status === 'pending').length;
+          const approvedApplications = updatedAdmissions.filter(admission => admission.status === 'approved').length;
+          
+          const thisMonth = new Date();
+          thisMonth.setDate(1);
+          thisMonth.setHours(0, 0, 0, 0);
+          
+          const thisMonthApplications = updatedAdmissions.filter(admission => {
+            const submittedDate = new Date(admission.submittedAt);
+            return submittedDate >= thisMonth;
+          }).length;
+          
+          setStats({
+            totalApplications,
+            pendingApplications,
+            approvedApplications,
+            thisMonthApplications
+          });
+          
+          alert('Admission application permanently deleted from database!');
+        } else {
+          throw new Error('Failed to delete admission');
+        }
+      } catch (err) {
+        console.error('Error deleting admission:', err);
+        alert('Error deleting admission. Please try again.');
       }
     }
   };
