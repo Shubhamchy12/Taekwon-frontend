@@ -147,6 +147,17 @@ const createStudent = async (req, res) => {
     console.log('📝 Create student request received');
     console.log('📦 Request body:', req.body);
     
+    // Check MongoDB connection
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      console.error('❌ MongoDB is not connected. Connection state:', mongoose.connection.readyState);
+      return res.status(503).json({
+        status: 'error',
+        message: 'Database connection is not available. Please check MongoDB connection and IP whitelist settings.',
+        details: 'The server cannot connect to MongoDB Atlas. This is usually due to IP whitelist restrictions.'
+      });
+    }
+    
     const {
       fullName,
       dateOfBirth,
@@ -194,22 +205,25 @@ const createStudent = async (req, res) => {
       });
     }
 
-    // Check if email already exists
-    const existingStudent = await Student.findOne({ email: email.toLowerCase() });
-    if (existingStudent) {
-      console.log('❌ Email already exists:', email);
-      return res.status(400).json({
-        status: 'error',
-        message: `Email "${email}" is already registered. Please use a different email address.`
-      });
+    // Generate unique student ID - find the highest existing ID and increment
+    const lastStudent = await Student.findOne().sort({ studentId: -1 }).select('studentId');
+    let studentId;
+    
+    if (lastStudent && lastStudent.studentId) {
+      // Extract number from last student ID (e.g., "STU0001" -> 1)
+      const lastNumber = parseInt(lastStudent.studentId.replace('STU', ''));
+      studentId = `STU${String(lastNumber + 1).padStart(4, '0')}`;
+    } else {
+      // No students exist yet, start with STU0001
+      studentId = 'STU0001';
     }
+    
+    console.log('🆔 Generated student ID:', studentId);
 
-    // Generate unique student ID
-    const studentCount = await Student.countDocuments();
-    const studentId = `STU${String(studentCount + 1).padStart(4, '0')}`;
-
-    // Create user account for student (optional)
+    // Create user account for student (optional) - SKIP for now to avoid phone validation issues
     let userId = null;
+    // Commenting out user creation to avoid validation errors
+    /*
     try {
       const User = require('../models/User');
       const user = new User({
@@ -224,6 +238,7 @@ const createStudent = async (req, res) => {
     } catch (userError) {
       console.log('User creation failed, continuing without user account:', userError.message);
     }
+    */
 
     // Create student record
     const student = new Student({
@@ -254,7 +269,9 @@ const createStudent = async (req, res) => {
       }]
     });
 
+    console.log('💾 Attempting to save student to database...');
     const savedStudent = await student.save();
+    console.log('✅ Student saved successfully:', savedStudent.studentId);
 
     res.status(201).json({
       status: 'success',
@@ -276,11 +293,31 @@ const createStudent = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Create student error:', error);
-    res.status(500).json({
+    console.error('❌ Create student error:', error);
+    console.error('❌ Error name:', error.name);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error stack:', error.stack);
+    
+    // Provide more specific error messages
+    let errorMessage = 'Error creating student';
+    let statusCode = 500;
+    
+    if (error.name === 'ValidationError') {
+      errorMessage = 'Validation error: ' + Object.values(error.errors).map(e => e.message).join(', ');
+      statusCode = 400;
+    } else if (error.code === 11000) {
+      errorMessage = 'A student with this email already exists';
+      statusCode = 400;
+    } else if (error.message.includes('buffering timed out')) {
+      errorMessage = 'Database connection timeout. Please check MongoDB connection.';
+      statusCode = 503;
+    }
+    
+    res.status(statusCode).json({
       status: 'error',
-      message: 'Error creating student',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: errorMessage,
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

@@ -19,6 +19,9 @@ const achievementRoutes = require('./routes/achievements');
 const badgeRoutes = require('./routes/badges');
 const certificateTemplateRoutes = require('./routes/certificate-templates');
 const feeRoutes = require('./routes/fees');
+const beltRoutes = require('./routes/belt');
+const eventRoutes = require('./routes/events');
+const participantRoutes = require('./routes/participants');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -50,7 +53,8 @@ if (process.env.NODE_ENV === 'development') {
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  console.log(`📨 ${new Date().toISOString()} - ${req.method} ${req.path}`);
+  console.log(`   Headers:`, req.headers.authorization ? 'Has Auth Token' : 'No Auth Token');
   next();
 });
 
@@ -78,6 +82,73 @@ if (process.env.MONGODB_URI) {
 }
 
 // Contact routes are handled by the contact router below
+
+// Test belt levels endpoint (no auth required)
+app.get('/api/test-belt-levels', async (req, res) => {
+  try {
+    const Belt = require('./models/Belt');
+    console.log('🧪 Test belt levels endpoint called');
+    
+    const belts = await Belt.find({ isActive: true }).sort({ level: 1 });
+    console.log(`Found ${belts.length} belts in database`);
+    
+    res.json({ 
+      status: 'success', 
+      message: `Found ${belts.length} belts`,
+      data: { belts }
+    });
+  } catch (error) {
+    console.error('Test belt levels error:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Test failed',
+      error: error.message
+    });
+  }
+});
+
+// Test belt creation endpoint
+app.get('/api/test-belt-creation', async (req, res) => {
+  try {
+    const Belt = require('./models/Belt');
+    
+    console.log('Testing belt creation...');
+    
+    const testBeltData = {
+      name: 'Test White Belt',
+      level: 99,
+      color: 'white',
+      hex: '#FFFFFF',
+      requirements: ['Test requirement 1', 'Test requirement 2'],
+      students: 0
+    };
+    
+    console.log('Creating belt with data:', testBeltData);
+    
+    const belt = new Belt(testBeltData);
+    await belt.save();
+    
+    console.log('Belt created successfully:', belt._id);
+    
+    // Fetch it back
+    const savedBelt = await Belt.findById(belt._id);
+    
+    res.json({ 
+      status: 'success', 
+      message: 'Belt created successfully',
+      beltId: belt._id,
+      data: savedBelt
+    });
+  } catch (error) {
+    console.error('Test belt creation error:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Test belt creation failed',
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
 
 // Test students controller directly
 app.get('/api/students-test', async (req, res) => {
@@ -185,6 +256,9 @@ app.use('/api/achievements', achievementRoutes);
 app.use('/api/badges', badgeRoutes);
 app.use('/api/certificate-templates', certificateTemplateRoutes);
 app.use('/api/fees', feeRoutes);
+app.use('/api/belts', beltRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/events', participantRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
