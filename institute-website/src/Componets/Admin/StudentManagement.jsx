@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { FaEye, FaEdit, FaTrash } from 'react-icons/fa';
 
 function StudentManagement() {
   const [students, setStudents] = useState([]);
@@ -8,7 +9,6 @@ function StudentManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showPromoteModal, setShowPromoteModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [stats, setStats] = useState({
     total: 0,
@@ -396,7 +396,6 @@ function StudentManagement() {
         phone: formData.get('emergencyContactPhone'),
         relationship: formData.get('emergencyContactRelationship')
       },
-      currentBelt: formData.get('currentBelt') || 'white',
       courseLevel: formData.get('courseLevel')
     };
 
@@ -422,41 +421,6 @@ function StudentManagement() {
     };
 
     updateStudent(selectedStudent.id, studentData);
-  };
-
-  // Promote student belt with proper form
-  const handlePromoteStudent = (student) => {
-    setSelectedStudent(student);
-    setShowPromoteModal(true);
-  };
-
-  // Promote student to selected belt
-  const promoteStudentToBelt = async (targetBelt, notes = '') => {
-    if (!selectedStudent || !authToken) {
-      alert('Please login first');
-      return;
-    }
-
-    try {
-      const studentData = { 
-        currentBelt: targetBelt,
-        // Add belt history entry
-        $push: {
-          beltHistory: {
-            belt: targetBelt,
-            awardedDate: new Date(),
-            notes: notes || `Promoted to ${getBeltLabel(targetBelt)}`
-          }
-        }
-      };
-      
-      await updateStudent(selectedStudent.id, { currentBelt: targetBelt });
-      setShowPromoteModal(false);
-      setSelectedStudent(null);
-    } catch (error) {
-      console.error('Error promoting student:', error);
-      alert('Error promoting student. Please try again.');
-    }
   };
 
   if (loading) {
@@ -575,6 +539,9 @@ function StudentManagement() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Student ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Student
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -582,9 +549,6 @@ function StudentManagement() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Course Level
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Belt Level
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -598,6 +562,9 @@ function StudentManagement() {
               {filteredStudents.map((student) => (
                 <tr key={student.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{student.studentId || 'N/A'}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
@@ -607,7 +574,15 @@ function StudentManagement() {
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{student.fullName}</div>
+                        <button
+                          onClick={() => {
+                            setSelectedStudent(student);
+                            setShowViewModal(true);
+                          }}
+                          className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left"
+                        >
+                          {student.fullName}
+                        </button>
                         <div className="text-sm text-gray-500">Age: {student.age || 'N/A'}</div>
                       </div>
                     </div>
@@ -623,46 +598,38 @@ function StudentManagement() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getBeltColor(student.currentBelt)}`}>
-                      {getBeltLabel(student.currentBelt)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(student.status)}`}>
                       {student.status?.charAt(0).toUpperCase() + student.status?.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
+                    <div className="flex gap-2">
                       <button 
                         onClick={() => {
                           setSelectedStudent(student);
                           setShowViewModal(true);
                         }}
-                        className="text-red-600 hover:text-red-900"
+                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                        title="View Details"
                       >
-                        View
+                        <FaEye className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => {
                           setSelectedStudent(student);
                           setShowEditModal(true);
                         }}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors"
+                        title="Edit"
                       >
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => handlePromoteStudent(student)}
-                        className="text-green-600 hover:text-green-900"
-                      >
-                        Promote
+                        <FaEdit className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => deleteStudentHandler(student.id)}
-                        className="text-red-600 hover:text-red-900 font-semibold"
+                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                        title="Delete"
                       >
-                        Delete
+                        <FaTrash className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -855,15 +822,6 @@ function StudentManagement() {
                     <option value="beginner">Beginner</option>
                     <option value="intermediate">Intermediate</option>
                     <option value="advanced">Advanced</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Belt Level *</label>
-                  <select name="currentBelt" className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" required defaultValue="white">
-                    <option value="">Select Belt</option>
-                    {beltLevels.map(belt => (
-                      <option key={belt.value} value={belt.value}>{belt.label}</option>
-                    ))}
                   </select>
                 </div>
                 <div>
@@ -1184,110 +1142,6 @@ function StudentManagement() {
                 Close
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Promote Student Modal */}
-      {showPromoteModal && selectedStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-slate-800">Promote Student</h2>
-              <button 
-                onClick={() => {
-                  setShowPromoteModal(false);
-                  setSelectedStudent(null);
-                }}
-                className="text-slate-500 hover:text-slate-700 text-2xl"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <div className="mb-6">
-              <div className="text-center mb-4">
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-red-600 font-bold text-lg">
-                    {selectedStudent.fullName?.split(' ').map(n => n[0]).join('') || 'N/A'}
-                  </span>
-                </div>
-                <h3 className="text-lg font-semibold text-slate-800">{selectedStudent.fullName}</h3>
-                <p className="text-slate-600">Current Belt: 
-                  <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getBeltColor(selectedStudent.currentBelt)}`}>
-                    {getBeltLabel(selectedStudent.currentBelt)}
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.target);
-              const targetBelt = formData.get('targetBelt');
-              const notes = formData.get('notes');
-              
-              if (!targetBelt) {
-                alert('Please select a belt level');
-                return;
-              }
-              
-              promoteStudentToBelt(targetBelt, notes);
-            }} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Promote to Belt *</label>
-                <select 
-                  name="targetBelt" 
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  required
-                >
-                  <option value="">Select Belt Level</option>
-                  {beltLevels.map(belt => {
-                    const currentIndex = beltLevels.findIndex(b => b.value === selectedStudent.currentBelt);
-                    const beltIndex = beltLevels.findIndex(b => b.value === belt.value);
-                    
-                    // Only show belts higher than current belt
-                    if (beltIndex > currentIndex) {
-                      return (
-                        <option key={belt.value} value={belt.value}>
-                          {belt.label}
-                        </option>
-                      );
-                    }
-                    return null;
-                  })}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Notes (Optional)</label>
-                <textarea
-                  name="notes"
-                  placeholder="Add notes about this promotion..."
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  rows="3"
-                />
-              </div>
-              
-              <div className="flex justify-end space-x-4 pt-4">
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setShowPromoteModal(false);
-                    setSelectedStudent(null);
-                  }}
-                  className="px-6 py-3 bg-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-400 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  className="px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
-                >
-                  Promote Student
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

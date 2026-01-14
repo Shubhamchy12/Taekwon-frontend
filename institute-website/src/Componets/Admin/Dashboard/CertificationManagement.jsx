@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { FaEye, FaEdit, FaTrash, FaDownload } from 'react-icons/fa';
 
 // Certificate Management Component - Updated 2026-01-13
 function CertificationManagement() {
@@ -35,10 +36,34 @@ function CertificationManagement() {
     customVerificationCode: ''
   });
 
+  // Autocomplete states
+  const [students, setStudents] = useState([]);
+  const [studentSuggestions, setStudentSuggestions] = useState([]);
+  const [showStudentSuggestions, setShowStudentSuggestions] = useState(false);
+
   useEffect(() => {
     fetchCertificates();
     fetchStatistics();
+    fetchStudents();
   }, []);
+
+  const fetchStudents = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await axios.get('/api/students', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.status === 'success') {
+        setStudents(response.data.data.students || []);
+      }
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      setStudents([]);
+    }
+  };
 
   const fetchCertificates = async () => {
     try {
@@ -238,11 +263,54 @@ function CertificationManagement() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Handle student name autocomplete
+    if (name === 'studentName') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+      
+      if (value.trim() === '') {
+        setStudentSuggestions([]);
+        setShowStudentSuggestions(false);
+      } else {
+        // Filter students by name
+        const filtered = students.filter(s => 
+          s.fullName.toLowerCase().includes(value.toLowerCase())
+        );
+        setStudentSuggestions(filtered);
+        setShowStudentSuggestions(true);
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  const selectStudent = (student) => {
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      studentName: student.fullName
     }));
+    setShowStudentSuggestions(false);
   };
+
+  // Click outside handler to close autocomplete
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.autocomplete-container')) {
+        setShowStudentSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleCreateCertificate = async (e) => {
     e.preventDefault();
@@ -538,32 +606,36 @@ function CertificationManagement() {
                       {new Date(certificate.issuedDate).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex space-x-2">
+                      <div className="flex gap-2">
                         <button 
                           onClick={() => previewCertificate(certificate)}
-                          className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
+                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                          title="View Details"
                         >
-                          View
+                          <FaEye className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => editCertificate(certificate)}
-                          className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition-colors"
+                          className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors"
+                          title="Edit"
                         >
-                          Edit
+                          <FaEdit className="w-4 h-4" />
                         </button>
                         {certificate.imageUrl && (
                           <button 
                             onClick={() => handleDownloadCertificate(certificate._id)}
-                            className="bg-purple-500 text-white px-3 py-1 rounded text-sm hover:bg-purple-600 transition-colors"
+                            className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors"
+                            title="Download"
                           >
-                            Download
+                            <FaDownload className="w-4 h-4" />
                           </button>
                         )}
                         <button 
                           onClick={() => handleDeleteCertificate(certificate._id)}
-                          className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors"
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                          title="Delete"
                         >
-                          Delete
+                          <FaTrash className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -653,15 +725,53 @@ function CertificationManagement() {
                   <label className="block text-sm font-bold text-slate-700 mb-2">
                     Student Name <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="studentName"
-                    value={formData.studentName}
-                    onChange={handleInputChange}
-                    placeholder="Enter student name"
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    required
-                  />
+                  <div className="relative autocomplete-container">
+                    <input
+                      type="text"
+                      name="studentName"
+                      value={formData.studentName}
+                      onChange={handleInputChange}
+                      onFocus={() => {
+                        if (formData.studentName && studentSuggestions.length > 0) {
+                          setShowStudentSuggestions(true);
+                        }
+                      }}
+                      placeholder="Type student name..."
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      required
+                      autoComplete="off"
+                    />
+                    
+                    {/* Autocomplete Dropdown */}
+                    {showStudentSuggestions && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        {studentSuggestions.length > 0 ? (
+                          studentSuggestions.map((student) => (
+                            <div
+                              key={student._id}
+                              onClick={() => selectStudent(student)}
+                              className="px-3 py-2 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium text-gray-900">{student.fullName}</p>
+                                </div>
+                                <div className="text-xs text-green-600 font-semibold">Select</div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-3 py-4 text-center text-red-600">
+                            <p className="font-medium">Student not found</p>
+                            <p className="text-xs text-gray-500 mt-1">No student matches "{formData.studentName}"</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {formData.studentName && !students.find(s => s.fullName === formData.studentName) && !showStudentSuggestions && (
+                    <p className="text-xs text-red-600 mt-1">⚠️ This student is not in Student Management</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
@@ -696,20 +806,15 @@ function CertificationManagement() {
                   <label className="block text-sm font-bold text-slate-700 mb-2">
                     Achievement Type <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <input
+                    type="text"
                     name="achievementType"
                     value={formData.achievementType}
                     onChange={handleInputChange}
+                    placeholder="e.g., Belt Promotion, Tournament Award"
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
                     required
-                  >
-                    <option value="">Select Type</option>
-                    <option value="belt_promotion">Belt Promotion</option>
-                    <option value="tournament_award">Tournament Award</option>
-                    <option value="course_completion">Course Completion</option>
-                    <option value="special_achievement">Special Achievement</option>
-                    <option value="participation">Participation</option>
-                  </select>
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
@@ -871,12 +976,79 @@ function CertificationManagement() {
                   <label className="block text-sm font-bold text-slate-700 mb-2">
                     Student Name <span className="text-red-500">*</span>
                   </label>
+                  <div className="relative autocomplete-container">
+                    <input
+                      type="text"
+                      name="studentName"
+                      value={formData.studentName}
+                      onChange={handleInputChange}
+                      onFocus={() => {
+                        if (formData.studentName && studentSuggestions.length > 0) {
+                          setShowStudentSuggestions(true);
+                        }
+                      }}
+                      placeholder="Type student name..."
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      required
+                      autoComplete="off"
+                    />
+                    
+                    {/* Autocomplete Dropdown */}
+                    {showStudentSuggestions && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        {studentSuggestions.length > 0 ? (
+                          studentSuggestions.map((student) => (
+                            <div
+                              key={student._id}
+                              onClick={() => selectStudent(student)}
+                              className="px-3 py-2 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium text-gray-900">{student.fullName}</p>
+                                </div>
+                                <div className="text-xs text-green-600 font-semibold">Select</div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-3 py-4 text-center text-red-600">
+                            <p className="font-medium">Student not found</p>
+                            <p className="text-xs text-gray-500 mt-1">No student matches "{formData.studentName}"</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {formData.studentName && !students.find(s => s.fullName === formData.studentName) && !showStudentSuggestions && (
+                    <p className="text-xs text-red-600 mt-1">⚠️ This student is not in Student Management</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Certificate Code <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
-                    name="studentName"
-                    value={formData.studentName}
+                    name="customVerificationCode"
+                    value={formData.customVerificationCode}
                     onChange={handleInputChange}
-                    placeholder="Enter student name"
+                    placeholder="Enter certificate verification code"
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    maxLength="32"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Instructor Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="instructorName"
+                    value={formData.instructorName}
+                    onChange={handleInputChange}
+                    placeholder="Enter instructor name"
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
                     required
                   />
@@ -885,20 +1057,15 @@ function CertificationManagement() {
                   <label className="block text-sm font-bold text-slate-700 mb-2">
                     Achievement Type <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <input
+                    type="text"
                     name="achievementType"
                     value={formData.achievementType}
                     onChange={handleInputChange}
+                    placeholder="e.g., Belt Promotion, Tournament Award"
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
                     required
-                  >
-                    <option value="">Select Type</option>
-                    <option value="belt_promotion">Belt Promotion</option>
-                    <option value="tournament_award">Tournament Award</option>
-                    <option value="course_completion">Course Completion</option>
-                    <option value="special_achievement">Special Achievement</option>
-                    <option value="participation">Participation</option>
-                  </select>
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
@@ -922,28 +1089,6 @@ function CertificationManagement() {
                     value={formData.level}
                     onChange={handleInputChange}
                     placeholder="e.g., Yellow Belt, 1st Dan"
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Grade</label>
-                  <input
-                    type="text"
-                    name="grade"
-                    value={formData.grade}
-                    onChange={handleInputChange}
-                    placeholder="e.g., A+, Pass"
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Examiner</label>
-                  <input
-                    type="text"
-                    name="examiner"
-                    value={formData.examiner}
-                    onChange={handleInputChange}
-                    placeholder="Enter examiner name"
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
                 </div>

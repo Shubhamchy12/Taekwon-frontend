@@ -40,6 +40,11 @@ function FeeManagement() {
     notes: ''
   });
 
+  // Autocomplete states
+  const [students, setStudents] = useState([]);
+  const [studentSuggestions, setStudentSuggestions] = useState([]);
+  const [showStudentSuggestions, setShowStudentSuggestions] = useState(false);
+
   // API base URL
   const API_BASE_URL = '/api';
 
@@ -91,6 +96,29 @@ function FeeManagement() {
       'Content-Type': 'application/json',
       ...(authToken && { 'Authorization': `Bearer ${authToken}` })
     };
+  };
+
+  // Fetch students for autocomplete
+  const fetchStudents = async () => {
+    if (!authToken) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/students`, {
+        headers: getAuthHeaders()
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch students');
+      }
+
+      const data = await response.json();
+      if (data.status === 'success') {
+        setStudents(data.data.students || []);
+      }
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      setStudents([]);
+    }
   };
 
   // Fetch fees from backend
@@ -243,8 +271,23 @@ function FeeManagement() {
   useEffect(() => {
     if (authToken) {
       fetchFees();
+      fetchStudents();
     }
   }, [authToken, selectedMonth, filterStatus]);
+
+  // Close autocomplete dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.autocomplete-container')) {
+        setShowStudentSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const resetPaymentForm = () => {
     setPaymentForm({
@@ -268,6 +311,29 @@ function FeeManagement() {
       discount: { amount: 0, reason: '' },
       notes: ''
     });
+    setStudentSuggestions([]);
+    setShowStudentSuggestions(false);
+  };
+
+  const handleStudentNameChange = (value) => {
+    setNewFeeForm({...newFeeForm, studentName: value});
+    
+    if (value.trim() === '') {
+      setStudentSuggestions([]);
+      setShowStudentSuggestions(false);
+    } else {
+      // Filter students by name
+      const filtered = students.filter(s => 
+        s.fullName.toLowerCase().includes(value.toLowerCase())
+      );
+      setStudentSuggestions(filtered);
+      setShowStudentSuggestions(true);
+    }
+  };
+
+  const selectStudent = (student) => {
+    setNewFeeForm({...newFeeForm, studentName: student.fullName});
+    setShowStudentSuggestions(false);
   };
 
   const handleRecordPayment = (record) => {
@@ -827,14 +893,52 @@ function FeeManagement() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">Student Name *</label>
-                  <input 
-                    type="text"
-                    value={newFeeForm.studentName}
-                    onChange={(e) => setNewFeeForm({...newFeeForm, studentName: e.target.value})}
-                    placeholder="Enter student full name"
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                    required
-                  />
+                  <div className="relative autocomplete-container">
+                    <input 
+                      type="text"
+                      value={newFeeForm.studentName}
+                      onChange={(e) => handleStudentNameChange(e.target.value)}
+                      onFocus={() => {
+                        if (newFeeForm.studentName && studentSuggestions.length > 0) {
+                          setShowStudentSuggestions(true);
+                        }
+                      }}
+                      placeholder="Type student name..."
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                      required
+                      autoComplete="off"
+                    />
+                    
+                    {/* Autocomplete Dropdown */}
+                    {showStudentSuggestions && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        {studentSuggestions.length > 0 ? (
+                          studentSuggestions.map((student) => (
+                            <div
+                              key={student._id}
+                              onClick={() => selectStudent(student)}
+                              className="px-3 py-2 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium text-gray-900">{student.fullName}</p>
+                                </div>
+                                <div className="text-xs text-green-600 font-semibold">Select</div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-3 py-4 text-center text-red-600">
+                            <p className="font-medium">Student not found</p>
+                            <p className="text-xs text-gray-500 mt-1">No student matches "{newFeeForm.studentName}"</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {newFeeForm.studentName && !students.find(s => s.fullName === newFeeForm.studentName) && !showStudentSuggestions && (
+                    <p className="text-xs text-red-600 mt-1">⚠️ This student is not in Student Management</p>
+                  )}
                 </div>
                 
                 <div>
