@@ -6,6 +6,11 @@ const eventParticipantSchema = new mongoose.Schema({
     ref: 'Event',
     required: true
   },
+  studentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student',
+    required: true
+  },
   studentName: {
     type: String,
     required: true
@@ -34,5 +39,9 @@ const eventParticipantSchema = new mongoose.Schema({
 // Index for event lookups
 eventParticipantSchema.index({ event: 1 });
 eventParticipantSchema.index({ participationStatus: 1 });
+
+// Compound unique index to prevent duplicate registrations (one student per event)
+// Changed from studentName to studentId to allow multiple students with same name
+eventParticipantSchema.index({ event: 1, studentId: 1 }, { unique: true });
 
 module.exports = mongoose.model('EventParticipant', eventParticipantSchema);

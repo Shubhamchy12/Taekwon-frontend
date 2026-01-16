@@ -11,6 +11,9 @@ router.use(protect);
 // Statistics route
 router.get('/statistics', eventController.getEventStatistics);
 
+// Sync participant counts route
+router.post('/sync-participants', eventController.syncParticipantCounts);
+
 // Event routes
 router.get('/', eventController.getEvents);
 router.get('/:id', eventController.getEventById);

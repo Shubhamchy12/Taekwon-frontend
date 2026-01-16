@@ -6,18 +6,16 @@ const Admission = require('../models/Admission');
 const submitAdmission = async (req, res) => {
   try {
     const admissionData = req.body;
+    
+    console.log('📝 Received admission data:', JSON.stringify(admissionData, null, 2));
 
-    // Check if email already exists
-    const existingApplication = await Admission.findOne({ email: admissionData.email });
-    if (existingApplication) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'An application with this email already exists'
-      });
-    }
+    // Note: Allowing duplicate emails as multiple students can share the same email
+    // (e.g., siblings using parent's email, family email, etc.)
 
     // Create admission application
+    console.log('✅ Creating new admission...');
     const admission = await Admission.create(admissionData);
+    console.log('✅ Admission created successfully:', admission._id);
 
     // Calculate age for the response
     const age = admission.age;
@@ -39,11 +37,14 @@ const submitAdmission = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Admission submission error:', error);
+    console.error('❌ Admission submission error:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
     
     // Handle validation errors
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors).map(err => err.message);
+      console.error('Validation errors:', errors);
       return res.status(400).json({
         status: 'error',
         message: 'Validation failed',
@@ -53,7 +54,8 @@ const submitAdmission = async (req, res) => {
 
     res.status(500).json({
       status: 'error',
-      message: 'Error submitting admission application'
+      message: 'Error submitting admission application',
+      error: error.message
     });
   }
 };

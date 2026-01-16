@@ -89,7 +89,23 @@ const registerParticipant = async (req, res) => {
     }
     console.log('✅ Student is active');
 
-    console.log('🔍 Step 4: Checking event capacity...');
+    console.log('🔍 Step 4: Checking for duplicate registration...');
+    // Check if student is already registered for this event (by student ID, not name)
+    const existingParticipant = await EventParticipant.findOne({
+      event: req.params.eventId,
+      studentId: studentId  // ✅ Check by student ID to allow multiple students with same name
+    });
+    
+    if (existingParticipant) {
+      console.log('❌ Student already registered for this event');
+      return res.status(400).json({
+        status: 'error',
+        message: 'Student is already registered for this event'
+      });
+    }
+    console.log('✅ No duplicate registration found');
+
+    console.log('🔍 Step 5: Checking event capacity...');
     console.log('Current participants:', event.currentParticipants, 'Capacity:', event.capacity);
     // Check if event capacity is reached
     if (event.currentParticipants >= event.capacity) {
@@ -103,20 +119,21 @@ const registerParticipant = async (req, res) => {
 
     const participantData = {
       event: req.params.eventId,
+      studentId: studentId,  // ✅ Store student ID for unique identification
       studentName: student.fullName,
       participationStatus: participationStatus || 'Registered',
       registrationDate: new Date(),
       createdBy: req.user?.id
     };
 
-    console.log('💾 Step 5: Creating participant with data:', JSON.stringify(participantData, null, 2));
+    console.log('💾 Step 6: Creating participant with data:', JSON.stringify(participantData, null, 2));
 
     const participant = new EventParticipant(participantData);
     await participant.save();
 
     console.log('✅ Participant saved to database with ID:', participant._id);
 
-    console.log('📈 Step 6: Updating event participant count...');
+    console.log('📈 Step 7: Updating event participant count...');
     // Update event participant count
     event.currentParticipants += 1;
     await event.save();

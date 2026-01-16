@@ -22,6 +22,7 @@ const feeRoutes = require('./routes/fees');
 const beltRoutes = require('./routes/belt');
 const eventRoutes = require('./routes/events');
 const participantRoutes = require('./routes/participants');
+const attendanceRoutes = require('./routes/attendance');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -259,6 +260,7 @@ app.use('/api/fees', feeRoutes);
 app.use('/api/belts', beltRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/events', participantRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

@@ -68,7 +68,7 @@ const validateAdmission = [
     .withMessage('Gender must be male, female, or other'),
   
   body('phone')
-    .isMobilePhone()
+    .matches(/^[+]?[1-9][\d\s\-\(\)]{9,15}$/)
     .withMessage('Please provide a valid phone number'),
   
   body('email')
@@ -78,12 +78,12 @@ const validateAdmission = [
   
   body('address')
     .trim()
-    .isLength({ min: 10, max: 500 })
-    .withMessage('Address must be between 10 and 500 characters'),
+    .isLength({ min: 5, max: 500 })
+    .withMessage('Address must be between 5 and 500 characters'),
   
   body('courseLevel')
-    .isIn(['beginner', 'intermediate', 'advanced'])
-    .withMessage('Course level must be beginner, intermediate, or advanced'),
+    .isIn(['beginner', 'intermediate', 'advanced', 'black-belt'])
+    .withMessage('Course level must be beginner, intermediate, advanced, or black-belt'),
   
   body('emergencyContactName')
     .trim()
@@ -91,11 +91,11 @@ const validateAdmission = [
     .withMessage('Emergency contact name must be between 2 and 100 characters'),
   
   body('emergencyContactPhone')
-    .isMobilePhone()
+    .matches(/^[+]?[1-9][\d\s\-\(\)]{9,15}$/)
     .withMessage('Please provide a valid emergency contact phone number'),
   
   body('relationshipToStudent')
-    .isIn(['parent', 'guardian', 'sibling', 'spouse', 'other'])
+    .isIn(['parent', 'guardian', 'sibling', 'spouse', 'grandparent', 'other', 'friend'])
     .withMessage('Please select a valid relationship'),
   
   handleValidationErrors

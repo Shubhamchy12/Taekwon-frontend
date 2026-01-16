@@ -306,11 +306,53 @@ const getEventStatistics = async (req, res) => {
   }
 };
 
+// Sync participant counts for all events
+const syncParticipantCounts = async (req, res) => {
+  try {
+    console.log('🔄 Syncing participant counts for all events...');
+    
+    const events = await Event.find();
+    let updatedCount = 0;
+
+    for (const event of events) {
+      // Count actual participants for this event
+      const actualCount = await EventParticipant.countDocuments({ event: event._id });
+      
+      // Update if count is different
+      if (event.currentParticipants !== actualCount) {
+        console.log(`🔄 Event "${event.name}": ${event.currentParticipants} → ${actualCount}`);
+        event.currentParticipants = actualCount;
+        await event.save();
+        updatedCount++;
+      }
+    }
+
+    console.log(`✅ Synced ${updatedCount} events`);
+
+    res.json({
+      status: 'success',
+      message: `Participant counts synced successfully. Updated ${updatedCount} events.`,
+      data: {
+        totalEvents: events.length,
+        updatedEvents: updatedCount
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error syncing participant counts:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to sync participant counts',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getEvents,
   getEventById,
   createEvent,
   updateEvent,
   deleteEvent,
-  getEventStatistics
+  getEventStatistics,
+  syncParticipantCounts
 };

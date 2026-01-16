@@ -35,17 +35,42 @@ const admissionSchema = new mongoose.Schema({
     required: [true, 'Address is required'],
     maxlength: [500, 'Address cannot exceed 500 characters']
   },
+  city: {
+    type: String,
+    trim: true
+  },
+  state: {
+    type: String,
+    trim: true
+  },
+  pincode: {
+    type: String,
+    trim: true
+  },
+  nationality: {
+    type: String,
+    default: 'Indian'
+  },
   
   // Course Selection
   courseLevel: {
     type: String,
     required: [true, 'Course level is required'],
-    enum: ['beginner', 'intermediate', 'advanced']
+    enum: ['beginner', 'intermediate', 'advanced', 'black-belt']
   },
   preferredSchedule: {
     type: String,
-    enum: ['morning', 'evening', 'weekend'],
+    enum: ['morning', 'evening', 'weekend', 'flexible'],
     default: 'evening'
+  },
+  trainingGoals: {
+    type: String
+  },
+  previousMartialArts: {
+    type: String
+  },
+  fitnessLevel: {
+    type: String
   },
   
   // Emergency Contact
@@ -63,7 +88,21 @@ const admissionSchema = new mongoose.Schema({
   relationshipToStudent: {
     type: String,
     required: [true, 'Relationship to student is required'],
-    enum: ['parent', 'guardian', 'sibling', 'spouse', 'other']
+    enum: ['parent', 'guardian', 'sibling', 'spouse', 'grandparent', 'other', 'friend']
+  },
+  emergencyContactAddress: {
+    type: String,
+    maxlength: [500, 'Address cannot exceed 500 characters']
+  },
+  
+  // Parent/Guardian Information (for minors)
+  parentGuardianName: {
+    type: String,
+    trim: true
+  },
+  parentGuardianPhone: {
+    type: String,
+    trim: true
   },
   
   // Medical Information
@@ -71,6 +110,29 @@ const admissionSchema = new mongoose.Schema({
     type: String,
     maxlength: [1000, 'Medical conditions cannot exceed 1000 characters'],
     default: ''
+  },
+  
+  // Additional Information
+  howDidYouHear: {
+    type: String
+  },
+  specialRequests: {
+    type: String,
+    maxlength: [1000, 'Special requests cannot exceed 1000 characters']
+  },
+  
+  // Agreements
+  agreeToTerms: {
+    type: Boolean,
+    default: false
+  },
+  agreeToPhotos: {
+    type: Boolean,
+    default: false
+  },
+  agreeToEmails: {
+    type: Boolean,
+    default: false
   },
   
   // Application Status
