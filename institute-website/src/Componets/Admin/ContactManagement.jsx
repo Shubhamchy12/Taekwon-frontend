@@ -246,19 +246,19 @@ const ContactManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                      <div className="flex gap-2">
                         <button
                           onClick={() => {
                             setSelectedContact(contact);
                             setShowModal(true);
                           }}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                         >
                           View
                         </button>
                         <button
                           onClick={() => handleDeleteContact(contact._id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                         >
                           Delete
                         </button>

@@ -72,16 +72,20 @@ function EventManagement() {
   const fetchEvents = async () => {
     if (!authToken) return;
     try {
+      console.log('🔍 Fetching events from API...');
       const response = await fetch(`${API_BASE_URL}/events`, {
         headers: getAuthHeaders()
       });
+      console.log('📡 Response status:', response.status);
       if (!response.ok) throw new Error('Failed to fetch events');
       const data = await response.json();
+      console.log('📦 Events data received:', data);
       if (data.status === 'success') {
+        console.log('✅ Events loaded:', data.data.events?.length || 0);
         setEvents(data.data.events || []);
       }
     } catch (error) {
-      console.error('Error fetching events:', error);
+      console.error('❌ Error fetching events:', error);
     }
   };
 
@@ -474,6 +478,33 @@ function EventManagement() {
     }
   };
 
+  const handleSyncParticipantCounts = async () => {
+    if (!confirm('This will sync participant counts for all events. Continue?')) {
+      return;
+    }
+
+    try {
+      console.log('🔄 Syncing participant counts...');
+      const response = await fetch(`${API_BASE_URL}/events/sync-participants`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to sync counts');
+
+      if (data.status === 'success') {
+        alert(`✅ ${data.message}`);
+        // Refresh events to show updated counts
+        await fetchEvents();
+        await fetchStatistics();
+      }
+    } catch (error) {
+      console.error('Error syncing participant counts:', error);
+      alert(`Error: ${error.message}`);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'Completed':
@@ -558,13 +589,23 @@ function EventManagement() {
       {/* Header with Add Button */}
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-bold text-slate-900">Event Management</h3>
-        <button 
-          onClick={() => setShowAddEventModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-        >
-          <FaPlus className="w-4 h-4" />
-          <span>Create Event</span>
-        </button>
+        <div className="flex gap-3">
+          <button 
+            onClick={handleSyncParticipantCounts}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+            title="Sync participant counts if they're out of sync"
+          >
+            <FaCheckCircle className="w-4 h-4" />
+            <span>Sync Counts</span>
+          </button>
+          <button 
+            onClick={() => setShowAddEventModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+          >
+            <FaPlus className="w-4 h-4" />
+            <span>Create Event</span>
+          </button>
+        </div>
       </div>
 
       {/* Events Table */}
@@ -613,28 +654,28 @@ function EventManagement() {
                       <div className="flex gap-2">
                         <button 
                           onClick={() => handleViewParticipants(event)}
-                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                          title="View Participants"
+                          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5"
                         >
-                          <FaUsers className="w-4 h-4" />
+                          <FaUsers className="w-3.5 h-3.5" />
+                          <span>Participants</span>
                         </button>
                         <button 
                           onClick={() => handleOpenRegisterModal(event)}
-                          className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-                          title="Register Student"
+                          className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1.5"
                         >
-                          <FaPlus className="w-4 h-4" />
+                          <FaPlus className="w-3.5 h-3.5" />
+                          <span>Register</span>
                         </button>
                         <button 
                           onClick={() => handleEditEvent(event)}
-                          className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors"
+                          className="p-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center justify-center"
                           title="Edit"
                         >
                           <FaEdit className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => handleDeleteEvent(event._id)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                          className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
                           title="Delete"
                         >
                           <FaTrash className="w-4 h-4" />
@@ -1058,10 +1099,19 @@ function EventManagement() {
                         <div
                           key={student._id}
                           onClick={() => selectStudent(student)}
-                          className="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                          className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                         >
-                          <p className="font-medium text-gray-900">{student.fullName}</p>
-                          <p className="text-sm text-gray-500">{student.email || 'No email'}</p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900">{student.fullName}</p>
+                              <p className="text-sm text-gray-500">{student.email || 'No email'}</p>
+                            </div>
+                            <div className="ml-3">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {student.studentId || 'No ID'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1074,13 +1124,7 @@ function EventManagement() {
                     </p>
                   )}
                   
-                  <p className="text-xs text-gray-500 mt-1">Start typing to search for a student</p>
-                </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800">
-                    <strong>Note:</strong> Student will be registered with "Registered" status. You can update the status later from the participants list.
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Start typing to search for a student. Student ID is shown to help identify students with the same name.</p>
                 </div>
 
                 <div className="flex gap-4 pt-4">
@@ -1171,17 +1215,9 @@ function EventManagement() {
                             </span>
                           </td>
                           <td className="py-3 px-4">
-                            <select
-                              value={participant.participationStatus}
-                              onChange={(e) => handleUpdateParticipationStatus(participant._id, e.target.value)}
-                              className={`px-3 py-1 rounded-full text-xs font-semibold border-0 cursor-pointer ${getParticipationStatusColor(participant.participationStatus)}`}
-                            >
-                              <option value="Registered">Registered</option>
-                              <option value="Confirmed">Confirmed</option>
-                              <option value="Participated">Participated</option>
-                              <option value="Cancelled">Cancelled</option>
-                              <option value="No-Show">No-Show</option>
-                            </select>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold inline-block ${getParticipationStatusColor(participant.participationStatus)}`}>
+                              {participant.participationStatus}
+                            </span>
                           </td>
                           <td className="py-3 px-4 text-slate-600">
                             {new Date(participant.registrationDate).toLocaleDateString()}

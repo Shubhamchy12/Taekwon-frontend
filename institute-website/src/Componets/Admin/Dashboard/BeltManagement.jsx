@@ -1150,38 +1150,39 @@ function BeltManagement() {
                     )}
                   </td>
                   <td className="py-3 px-3">
-                    <div className="flex justify-center gap-1.5">
-                      <button 
-                        onClick={() => handleViewBelt(belt)}
-                        className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                        title="View Details"
-                      >
-                        <FaEye className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => handleEditBelt(belt)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <FaEdit className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteBelt(belt._id)}
-                        className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <FaTrash className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                      <div className="flex justify-center gap-2">
+                        <button 
+                          onClick={() => handleViewBelt(belt)}
+                          className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                          title="View"
+                        >
+                          <FaEye className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleEditBelt(belt)}
+                          className="p-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center justify-center"
+                          title="Edit"
+                        >
+                          <FaEdit className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteBelt(belt._id)}
+                          className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
+                          title="Delete"
+                        >
+                          <FaTrash className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
   );
+
   const renderPromotions = () => (
     <div className="space-y-6">
       {/* Header */}
@@ -1236,27 +1237,27 @@ function BeltManagement() {
                   <td className="py-4 px-6 text-slate-600">{new Date(promotion.promotionDate || promotion.date).toLocaleDateString()}</td>
                   <td className="py-4 px-6 text-slate-600">{promotion.instructor}</td>
                   <td className="py-4 px-6">
-                    <div className="flex justify-center gap-1.5">
+                    <div className="flex justify-center gap-2">
                       <button 
                         onClick={() => handleViewPromotion(promotion)}
-                        className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                        title="View Details"
+                        className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                        title="View"
                       >
-                        <FaEye className="w-3.5 h-3.5" />
+                        <FaEye className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleEditPromotion(promotion)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                        className="p-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center justify-center"
                         title="Edit"
                       >
-                        <FaEdit className="w-3.5 h-3.5" />
+                        <FaEdit className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleDeletePromotion(promotion._id)}
-                        className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                        className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
                         title="Delete"
                       >
-                        <FaTrash className="w-3.5 h-3.5" />
+                        <FaTrash className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -1352,27 +1353,27 @@ function BeltManagement() {
                       </div>
                     </td>
                     <td className="py-4 px-6">
-                      <div className="flex justify-center gap-1.5">
+                      <div className="flex justify-center gap-2">
                         <button 
                           onClick={() => handleViewTest(test)}
-                          className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                          title="View Details"
+                          className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                          title="View"
                         >
-                          <FaEye className="w-3.5 h-3.5" />
+                          <FaEye className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => handleEditTest(test)}
-                          className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                          className="p-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center justify-center"
                           title="Edit"
                         >
-                          <FaEdit className="w-3.5 h-3.5" />
+                          <FaEdit className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => handleDeleteTest(test._id)}
-                          className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                          className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
                           title="Delete"
                         >
-                          <FaTrash className="w-3.5 h-3.5" />
+                          <FaTrash className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

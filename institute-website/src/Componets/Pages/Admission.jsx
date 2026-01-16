@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import image from '../../assets/image.png';
 import { 
   FaUser, 
@@ -15,10 +16,13 @@ import {
   FaShieldAlt,
   FaUsers,
   FaStar,
-  FaSpinner
+  FaSpinner,
+  FaHome
 } from 'react-icons/fa';
 
 function Admission() {
+  const navigate = useNavigate();
+  const [showThankYou, setShowThankYou] = useState(false);
   const [formData, setFormData] = useState({
     // Personal Information
     fullName: '',
@@ -123,40 +127,34 @@ function Admission() {
     setSubmitStatus(null);
 
     try {
-      // Create admission object
-      const newAdmission = {
-        _id: Date.now().toString(),
-        ...formData,
-        status: 'pending',
-        submittedAt: new Date().toISOString()
-      };
+      console.log('Submitting form data:', formData);
       
-      // Get existing admissions from localStorage
-      const existingAdmissions = JSON.parse(localStorage.getItem('admissions') || '[]');
-      
-      // Check if email already exists
-      const existingApplication = existingAdmissions.find(admission => admission.email === formData.email);
-      if (existingApplication) {
-        setSubmitStatus({
-          type: 'error',
-          message: 'An application with this email already exists.'
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Add new admission to the beginning of the array
-      const updatedAdmissions = [newAdmission, ...existingAdmissions];
-      
-      // Save to localStorage
-      localStorage.setItem('admissions', JSON.stringify(updatedAdmissions));
-      
-      console.log('Admission application submitted successfully:', newAdmission);
-
-      setSubmitStatus({
-        type: 'success',
-        message: 'Application submitted successfully! We will review your application and contact you within 24-48 hours.'
+      // Send admission data to backend API
+      const response = await fetch('http://localhost:5000/api/admissions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
       });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('Backend error response:', data);
+        // Show specific validation errors if available
+        if (data.errors && Array.isArray(data.errors)) {
+          // Extract error messages from the errors array
+          const errorMessages = data.errors.map(err => err.msg || err.message || JSON.stringify(err));
+          throw new Error(errorMessages.join(', '));
+        }
+        throw new Error(data.message || 'Failed to submit application');
+      }
+
+      console.log('Admission application submitted successfully:', data);
+
+      // Show thank you card
+      setShowThankYou(true);
       
       // Reset form
       setFormData({
@@ -188,6 +186,11 @@ function Admission() {
         agreeToPhotos: false,
         agreeToEmails: false
       });
+
+      // Redirect to home page after 5 minutes (300 seconds)
+      setTimeout(() => {
+        navigate('/');
+      }, 300000);
     } catch (error) {
       console.error('Admission form submission error:', error);
       setSubmitStatus({
@@ -198,6 +201,72 @@ function Admission() {
       setIsSubmitting(false);
     }
   };
+
+  // Thank You Card Component
+  if (showThankYou) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 p-4">
+        <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12 text-center animate-fadeIn">
+          {/* Success Icon */}
+          <div className="mb-6 flex justify-center">
+            <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center animate-bounce">
+              <FaCheckCircle className="text-white text-5xl" />
+            </div>
+          </div>
+
+          {/* Thank You Message */}
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Thank You! 🎉
+          </h1>
+          
+          <p className="text-xl text-gray-700 mb-6">
+            Your admission application has been successfully submitted!
+          </p>
+
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 mb-8">
+            <p className="text-gray-800 text-lg leading-relaxed">
+              We're excited to have you join our <span className="font-bold text-red-600">Taekwon-Do family</span>! 
+              Our team will carefully review your application and contact you within <span className="font-semibold">24-48 hours</span>.
+            </p>
+          </div>
+
+          {/* Additional Info */}
+          <div className="space-y-4 mb-8">
+            <div className="flex items-center justify-center text-gray-600">
+              <FaEnvelope className="mr-2 text-amber-500" />
+              <span>Check your email for confirmation</span>
+            </div>
+            <div className="flex items-center justify-center text-gray-600">
+              <FaPhone className="mr-2 text-amber-500" />
+              <span>We'll call you soon to discuss next steps</span>
+            </div>
+          </div>
+
+          {/* Redirect Message */}
+          <div className="text-gray-500 text-sm mb-6">
+            Redirecting to home page in 5 minutes...
+          </div>
+
+          {/* Home Button */}
+          <button
+            onClick={() => navigate('/')}
+            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold rounded-xl hover:from-red-700 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            <FaHome className="mr-2" />
+            Go to Home Page
+          </button>
+
+          {/* Decorative Elements */}
+          <div className="mt-8 flex justify-center space-x-2">
+            <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse delay-75"></div>
+            <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse delay-150"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ perspective: '1000px' }}>
       {/* Hero Section */}
@@ -457,9 +526,9 @@ function Admission() {
                       required
                       className="w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300">
                       <option value="">Select Your Level</option>
-                      <option value="beginner">Foundation Level (Beginner) - White to Yellow Belt</option>
-                      <option value="intermediate">Advanced Skills (Intermediate) - Green to Blue Belt</option>
-                      <option value="advanced">Master Level (Advanced) - Red to Black Belt</option>
+                      <option value="beginner">Foundation Level (Beginner)</option>
+                      <option value="intermediate">Advanced Skills (Intermediate)</option>
+                      <option value="advanced">Master Level (Advanced)</option>
                       <option value="black-belt">Black Belt Training</option>
                     </select>
                   </div>

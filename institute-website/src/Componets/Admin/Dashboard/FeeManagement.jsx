@@ -616,7 +616,7 @@ function FeeManagement() {
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex space-x-1">
+                      <div className="flex gap-2">
                         {/* Calculate remaining balance */}
                         {(() => {
                           const totalAmount = record.amount + (record.lateFee?.amount || 0) - (record.discount?.amount || 0);
@@ -628,17 +628,17 @@ function FeeManagement() {
                               <button 
                                 onClick={() => handleRecordPayment(record)}
                                 disabled={isFullyPaid}
-                                className={`px-2 py-1 rounded text-xs font-medium ${
+                                className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
                                   isFullyPaid
                                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    : 'bg-green-500 text-white hover:bg-green-600'
+                                    : 'bg-green-600 text-white hover:bg-green-700'
                                 }`}
                               >
                                 {isFullyPaid ? 'Paid' : 'Pay'}
                               </button>
                               <button 
                                 onClick={() => handleViewRecord(record)}
-                                className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 text-xs font-medium"
+                                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                               >
                                 View
                               </button>

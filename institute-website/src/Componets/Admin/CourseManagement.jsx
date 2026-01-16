@@ -654,25 +654,22 @@ function CourseManagement() {
                         <div className="text-sm font-bold text-red-600">₹{course.price}/month</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
+                        <div className="flex gap-2">
                           <button
                             onClick={() => handleViewCourse(course)}
-                            className="text-blue-600 hover:text-blue-900 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50"
-                            title="View Details"
+                            className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                           >
                             View
                           </button>
                           <button
                             onClick={() => handleEditCourse(course)}
-                            className="text-green-600 hover:text-green-900 px-2 py-1 rounded border border-green-200 hover:bg-green-50"
-                            title="Edit Course"
+                            className="px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDeleteCourse(course.id)}
-                            className="text-red-600 hover:text-red-900 px-2 py-1 rounded border border-red-200 hover:bg-red-50"
-                            title="Delete Course"
+                            className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                           >
                             Delete
                           </button>

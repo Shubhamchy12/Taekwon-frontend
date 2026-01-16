@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import img from '../../assets/img.jpg';
 import { 
   FaMapMarkerAlt, 
@@ -9,10 +10,13 @@ import {
   FaUser,
   FaQuestionCircle,
   FaCheckCircle,
-  FaSpinner
+  FaSpinner,
+  FaHome
 } from 'react-icons/fa';
 
 function Contact() {
+  const navigate = useNavigate();
+  const [showThankYou, setShowThankYou] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -78,10 +82,8 @@ function Contact() {
       const data = await response.json();
       
       if (data.status === 'success') {
-        setSubmitStatus({
-          type: 'success',
-          message: 'Message sent successfully! We will get back to you within 24 hours.'
-        });
+        // Show thank you card
+        setShowThankYou(true);
         
         // Reset form
         setFormData({
@@ -91,6 +93,11 @@ function Contact() {
           inquiryType: '',
           message: ''
         });
+
+        // Redirect to home page after 5 minutes (300 seconds)
+        setTimeout(() => {
+          navigate('/');
+        }, 300000);
       } else {
         throw new Error(data.message || 'Failed to send message');
       }
@@ -112,6 +119,73 @@ function Contact() {
       setIsSubmitting(false);
     }
   };
+
+  // Thank You Card Component
+  if (showThankYou) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 p-4">
+        <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12 text-center animate-fadeIn">
+          {/* Success Icon */}
+          <div className="mb-6 flex justify-center">
+            <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center animate-bounce">
+              <FaCheckCircle className="text-white text-5xl" />
+            </div>
+          </div>
+
+          {/* Thank You Message */}
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Thank You! 🎉
+          </h1>
+          
+          <p className="text-xl text-gray-700 mb-6">
+            Your message has been successfully sent!
+          </p>
+
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 mb-8">
+            <p className="text-gray-800 text-lg leading-relaxed">
+              We appreciate you reaching out to us! Our team will carefully review your message and 
+              get back to you within <span className="font-semibold">24 hours</span>. 
+              Thank you for your interest in our <span className="font-bold text-red-600">Taekwon-Do programs</span>!
+            </p>
+          </div>
+
+          {/* Additional Info */}
+          <div className="space-y-4 mb-8">
+            <div className="flex items-center justify-center text-gray-600">
+              <FaEnvelope className="mr-2 text-amber-500" />
+              <span>Check your email for confirmation</span>
+            </div>
+            <div className="flex items-center justify-center text-gray-600">
+              <FaPhone className="mr-2 text-amber-500" />
+              <span>We'll respond to your inquiry soon</span>
+            </div>
+          </div>
+
+          {/* Redirect Message */}
+          <div className="text-gray-500 text-sm mb-6">
+            Redirecting to home page in 5 minutes...
+          </div>
+
+          {/* Home Button */}
+          <button
+            onClick={() => navigate('/')}
+            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold rounded-xl hover:from-red-700 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            <FaHome className="mr-2" />
+            Go to Home Page
+          </button>
+
+          {/* Decorative Elements */}
+          <div className="mt-8 flex justify-center space-x-2">
+            <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse delay-75"></div>
+            <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse delay-150"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Hero Section */}

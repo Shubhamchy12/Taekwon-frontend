@@ -609,14 +609,14 @@ function CertificationManagement() {
                       <div className="flex gap-2">
                         <button 
                           onClick={() => previewCertificate(certificate)}
-                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                          title="View Details"
+                          className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                          title="View"
                         >
                           <FaEye className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => editCertificate(certificate)}
-                          className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors"
+                          className="p-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center justify-center"
                           title="Edit"
                         >
                           <FaEdit className="w-4 h-4" />
@@ -624,7 +624,7 @@ function CertificationManagement() {
                         {certificate.imageUrl && (
                           <button 
                             onClick={() => handleDownloadCertificate(certificate._id)}
-                            className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors"
+                            className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center"
                             title="Download"
                           >
                             <FaDownload className="w-4 h-4" />
@@ -632,7 +632,7 @@ function CertificationManagement() {
                         )}
                         <button 
                           onClick={() => handleDeleteCertificate(certificate._id)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                          className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
                           title="Delete"
                         >
                           <FaTrash className="w-4 h-4" />

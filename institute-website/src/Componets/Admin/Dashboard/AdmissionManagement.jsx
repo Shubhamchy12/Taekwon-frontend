@@ -17,23 +17,38 @@ function AdmissionManagement() {
     thisMonthApplications: 0
   });
 
-  // Load admissions from localStorage
+  // Load admissions from backend API
   useEffect(() => {
-    const loadAdmissions = () => {
+    const loadAdmissions = async () => {
       try {
-        const storedAdmissions = JSON.parse(localStorage.getItem('admissions') || '[]');
-        setAdmissions(storedAdmissions);
+        // Get auth token from localStorage
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch('http://localhost:5000/api/admin/admissions', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch admissions');
+        }
+        
+        const data = await response.json();
+        const fetchedAdmissions = data.data.admissions || [];
+        setAdmissions(fetchedAdmissions);
         
         // Calculate stats
-        const totalApplications = storedAdmissions.length;
-        const pendingApplications = storedAdmissions.filter(admission => admission.status === 'pending').length;
-        const approvedApplications = storedAdmissions.filter(admission => admission.status === 'approved').length;
+        const totalApplications = fetchedAdmissions.length;
+        const pendingApplications = fetchedAdmissions.filter(admission => admission.status === 'pending').length;
+        const approvedApplications = fetchedAdmissions.filter(admission => admission.status === 'approved').length;
         
         const thisMonth = new Date();
         thisMonth.setDate(1);
         thisMonth.setHours(0, 0, 0, 0);
         
-        const thisMonthApplications = storedAdmissions.filter(admission => {
+        const thisMonthApplications = fetchedAdmissions.filter(admission => {
           const submittedDate = new Date(admission.submittedAt);
           return submittedDate >= thisMonth;
         }).length;
@@ -65,21 +80,36 @@ function AdmissionManagement() {
 
   const handleStatusUpdate = async (admissionId, newStatus, adminNotes = '') => {
     try {
+      // Get auth token from localStorage
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`http://localhost:5000/api/admin/admissions/${admissionId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          adminNotes
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update admission status');
+      }
+
+      const data = await response.json();
+      
+      // Update local state with the updated admission
       const updatedAdmissions = admissions.map(admission => {
         if (admission._id === admissionId) {
-          return {
-            ...admission,
-            status: newStatus,
-            adminNotes,
-            reviewedAt: new Date().toISOString(),
-            ...(newStatus === 'approved' && !admission.studentId ? { studentId: generateStudentId() } : {})
-          };
+          return data.data.admission;
         }
         return admission;
       });
       
       setAdmissions(updatedAdmissions);
-      localStorage.setItem('admissions', JSON.stringify(updatedAdmissions));
       
       // Update stats
       const totalApplications = updatedAdmissions.length;
@@ -100,6 +130,7 @@ function AdmissionManagement() {
       setSelectedAdmission(null);
     } catch (error) {
       console.error('Error updating admission status:', error);
+      alert('Error updating admission status. Please try again.');
     }
   };
 
@@ -120,9 +151,13 @@ function AdmissionManagement() {
   const handleDeleteAdmission = async (admissionId) => {
     if (window.confirm('Are you sure you want to permanently delete this admission application? This action cannot be undone and will remove the application from the database forever.')) {
       try {
+        // Get auth token from localStorage
+        const token = localStorage.getItem('token');
+        
         const response = await fetch(`http://localhost:5000/api/admin/admissions/${admissionId}`, {
           method: 'DELETE',
           headers: {
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
@@ -366,10 +401,10 @@ function AdmissionManagement() {
                             {new Date(admission.submittedAt).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4">
-                            <div className="flex space-x-2">
+                            <div className="flex gap-2">
                               <button
                                 onClick={() => viewAdmissionDetails(admission._id)}
-                                className="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600 transition-colors"
+                                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                               >
                                 View
                               </button>
@@ -377,13 +412,13 @@ function AdmissionManagement() {
                                 <>
                                   <button
                                     onClick={() => handleStatusUpdate(admission._id, 'approved')}
-                                    className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600 transition-colors"
+                                    className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                                   >
                                     Approve
                                   </button>
                                   <button
                                     onClick={() => handleStatusUpdate(admission._id, 'rejected')}
-                                    className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600 transition-colors"
+                                    className="px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
                                   >
                                     Reject
                                   </button>
@@ -391,7 +426,7 @@ function AdmissionManagement() {
                               )}
                               <button
                                 onClick={() => handleDeleteAdmission(admission._id)}
-                                className="bg-gray-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-gray-600 transition-colors"
+                                className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                               >
                                 Delete
                               </button>

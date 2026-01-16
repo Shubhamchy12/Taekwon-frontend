@@ -565,26 +565,17 @@ function StudentManagement() {
                     <div className="text-sm font-medium text-gray-900">{student.studentId || 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-                          <span className="text-red-600 font-medium text-sm">
-                            {student.fullName?.split(' ').map(n => n[0]).join('') || 'N/A'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <button
-                          onClick={() => {
-                            setSelectedStudent(student);
-                            setShowViewModal(true);
-                          }}
-                          className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left"
-                        >
-                          {student.fullName}
-                        </button>
-                        <div className="text-sm text-gray-500">Age: {student.age || 'N/A'}</div>
-                      </div>
+                    <div>
+                      <button
+                        onClick={() => {
+                          setSelectedStudent(student);
+                          setShowViewModal(true);
+                        }}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left"
+                      >
+                        {student.fullName}
+                      </button>
+                      <div className="text-sm text-gray-500">Age: {student.age || 'N/A'}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -609,8 +600,8 @@ function StudentManagement() {
                           setSelectedStudent(student);
                           setShowViewModal(true);
                         }}
-                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                        title="View Details"
+                        className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                        title="View"
                       >
                         <FaEye className="w-4 h-4" />
                       </button>
@@ -619,14 +610,14 @@ function StudentManagement() {
                           setSelectedStudent(student);
                           setShowEditModal(true);
                         }}
-                        className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors"
+                        className="p-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center justify-center"
                         title="Edit"
                       >
                         <FaEdit className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => deleteStudentHandler(student.id)}
-                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                        className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
                         title="Delete"
                       >
                         <FaTrash className="w-4 h-4" />

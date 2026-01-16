@@ -70,6 +70,13 @@ const CertificateVerification = () => {
         // Open certificate image in a new window
         const imageUrl = response.data.data.certificate.imageUrl;
         window.open(imageUrl, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+        
+        // Reset the page after 2 seconds to allow user to see the action completed
+        setTimeout(() => {
+          setVerificationResult(null);
+          setVerificationCode('');
+          setError('');
+        }, 2000);
       } else {
         setError('Certificate image not available for viewing');
       }
@@ -106,6 +113,13 @@ const CertificateVerification = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+      
+      // Reset the page after 2 seconds to allow user to see the download started
+      setTimeout(() => {
+        setVerificationResult(null);
+        setVerificationCode('');
+        setError('');
+      }, 2000);
     } catch (error) {
       console.error('Error downloading certificate:', error);
       setError('Failed to download certificate');

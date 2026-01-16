@@ -1,5 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
+import { 
+  FaChartLine, 
+  FaUsers, 
+  FaClipboardCheck, 
+  FaMedal, 
+  FaCalendarAlt, 
+  FaCertificate, 
+  FaUserPlus, 
+  FaDollarSign, 
+  FaBook, 
+  FaEnvelope,
+  FaSignOutAlt,
+  FaUserShield
+} from 'react-icons/fa';
 
 function AdminLayout() {
   const [user, setUser] = useState(null);
@@ -35,38 +49,38 @@ function AdminLayout() {
 
   const menuGroups = [
     {
-      title: 'Dashboard & Analytics',
+     
       items: [
-        { path: '/admin/dashboard', name: 'Dashboard & Analytics Reports', icon: '📊' }
+        { path: '/admin/dashboard', name: 'Dashboard & Analytics Reports', icon: FaChartLine }
       ]
     },
     {
-      title: 'Student Management',
+     
       items: [
-        { path: '/admin/students', name: 'Student Account Management', icon: '👥'},
-        { path: '/admin/attendance', name: 'Attendance Management & Reports', icon: '📅'},
-        { path: '/admin/belts', name: 'Level / Belt Management', icon: '🥋'}
+        { path: '/admin/students', name: 'Student Account Management', icon: FaUsers},
+        { path: '/admin/attendance', name: 'Attendance Management & Reports', icon: FaClipboardCheck},
+        { path: '/admin/belts', name: 'Level / Belt Management', icon: FaMedal}
       ]
     },
     {
       title: 'Academy Operations',
       items: [
-        { path: '/admin/events', name: 'Event Creation & Tracking', icon: '🎯'},
-        { path: '/admin/certificates', name: 'Certificate Upload', icon: '🏆'},
-        { path: '/admin/admissions', name: 'Admissions', icon: '📝'}
+        { path: '/admin/events', name: 'Event Creation & Tracking', icon: FaCalendarAlt},
+        { path: '/admin/certificates', name: 'Certificate Upload', icon: FaCertificate},
+        { path: '/admin/admissions', name: 'Admissions', icon: FaUserPlus}
       ]
     },
     {
-      title: 'Financial Management',
+      
       items: [
-        { path: '/admin/fees', name: 'Fee Setup & Tracking', icon: '💰'}
+        { path: '/admin/fees', name: 'Fee Setup & Tracking', icon: FaDollarSign}
       ]
     },
     {
-      title: 'System Administration',
+      
       items: [
-         { path: '/admin/courses', name: 'Course Management', icon: '📚'},
-        { path: '/admin/contacts', name: 'Contact Form', icon: '💬'},
+         { path: '/admin/courses', name: 'Course Management', icon: FaBook},
+        { path: '/admin/contacts', name: 'Contact Form', icon: FaEnvelope},
        
       ]
     }
@@ -90,9 +104,11 @@ function AdminLayout() {
         {/* Header */}
         <div className="p-6 border-b border-slate-700 bg-gradient-to-r from-slate-900 to-slate-800">
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-slate-900 font-black text-xl">CW</span>
-            </div>
+            <img 
+              src="/WhatsApp Image 2025-12-30 at 5.45.49 PM.jpeg" 
+              alt="Combat Warrior Logo" 
+              className="w-12 h-12 rounded-xl object-cover shadow-lg"
+            />
             <div>
               <h2 className="text-xl font-bold text-white">Admin Panel</h2>
               <p className="text-slate-400 text-sm">Full System Control</p>
@@ -103,58 +119,42 @@ function AdminLayout() {
        
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto p-4 space-y-2">
           {menuGroups.map((group, groupIndex) => (
-            <div key={groupIndex}>
-              {group.items.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`w-full flex items-center space-x-3 px-4 py-4 rounded-xl transition-all duration-300 group h-[72px] ${
-                    location.pathname === item.path
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg transform scale-105'
-                      : 'text-slate-300 hover:bg-slate-700 hover:text-white hover:transform hover:scale-102'
-                  }`}
-                >
-                  <span className="text-2xl group-hover:animate-pulse flex-shrink-0">{item.icon}</span>
-                  <div className="flex-1 text-left min-w-0">
-                    <div className="font-semibold text-sm leading-tight truncate">{item.name}</div>
-                    <div className={`text-xs mt-1 leading-tight truncate ${
+            <div key={groupIndex} className="mb-6">
+              {group.items.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-300 group mb-2 ${
                       location.pathname === item.path
-                        ? 'text-amber-100'
-                        : 'text-slate-500 group-hover:text-slate-400'
-                    }`}>
-                      {item.description}
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg'
+                        : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                    }`}
+                  >
+                    <IconComponent className="w-5 h-5 mr-3 flex-shrink-0" />
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-sm leading-tight">{item.name}</div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           ))}
         </nav>
 
         
 
-        {/* User Info & Logout */}
+        {/* Logout */}
         <div className="p-4 border-t border-slate-700 bg-gradient-to-r from-slate-800 to-slate-900">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-slate-900 font-bold">
-                {user?.name?.charAt(0)?.toUpperCase() || 'A'}
-              </span>
-            </div>
-            <div>
-              <p className="font-semibold text-white text-sm">{user?.name || 'Admin'}</p>
-              <p className="text-slate-400 text-xs capitalize">{user?.role || 'admin'} Access</p>
-            </div>
-          </div>
-          
           <button
             onClick={handleLogout}
-            className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 font-semibold shadow-lg group"
+            className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center font-semibold shadow-lg"
           >
-            <span className="group-hover:animate-bounce">🚪</span>
-            <span>Secure Logout</span>
+            <FaSignOutAlt className="w-5 h-5 mr-2" />
+            <span>Logout</span>
           </button>
         </div>
       </div>
