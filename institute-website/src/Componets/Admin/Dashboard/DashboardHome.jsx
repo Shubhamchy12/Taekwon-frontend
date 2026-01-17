@@ -4,7 +4,7 @@ import { FaUsers, FaCalendarAlt, FaFileAlt, FaMoneyBillWave, FaGraduationCap, Fa
 
 function DashboardHome() {
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ totalStudents: 0, activeEvents: 0, pendingAdmissions: 0, totalRevenue: 0, beltTests: 0, attendanceRate: 0, certificates: 0 });
+  const [stats, setStats] = useState({ totalStudents: 0, totalEvents: 0, dailyAdmissions: 0, totalRevenue: 0, beltTests: 0, dailyAttendance: 0, certificates: 0 });
   const [recentActivities, setRecentActivities] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const API_BASE_URL = 'http://localhost:5000/api';
@@ -32,13 +32,13 @@ function DashboardHome() {
         totalStudents = Array.isArray(studentsData) ? studentsData.length : 0;
       }
 
-      let activeEvents = 0, upcomingEventsData = [];
+      let totalEvents = 0, upcomingEventsData = [];
       if (eventsRes.status === 'fulfilled' && eventsRes.value.ok) {
         const response = await eventsRes.value.json();
         const eventsData = response.data?.events || response.data || response || [];
         if (Array.isArray(eventsData)) {
           const now = new Date();
-          activeEvents = eventsData.filter(e => new Date(e.date) >= now).length || 0;
+          totalEvents = eventsData.length || 0;
           upcomingEventsData = eventsData.filter(e => new Date(e.date) >= now).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 3)
             .map(e => ({ title: e.name, date: new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
               participants: e.capacity || 0, status: e.status || 'Scheduled',
@@ -46,12 +46,20 @@ function DashboardHome() {
         }
       }
 
-      let pendingAdmissions = 0;
+      let dailyAdmissions = 0;
       if (admissionsRes.status === 'fulfilled' && admissionsRes.value.ok) {
         const response = await admissionsRes.value.json();
         const admissionsData = response.data?.admissions || response.data || response || [];
         if (Array.isArray(admissionsData)) {
-          pendingAdmissions = admissionsData.filter(a => a.status === 'pending').length || 0;
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const tomorrow = new Date(today);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          
+          dailyAdmissions = admissionsData.filter(admission => {
+            const admissionDate = new Date(admission.createdAt || admission.submissionDate);
+            return admissionDate >= today && admissionDate < tomorrow;
+          }).length;
         }
       }
 
@@ -73,25 +81,32 @@ function DashboardHome() {
         certificates = Array.isArray(certificatesData) ? certificatesData.length : 0;
       }
 
-      let attendanceRate = 0;
+      let dailyAttendance = 0;
       if (attendanceRes.status === 'fulfilled' && attendanceRes.value.ok) {
         const response = await attendanceRes.value.json();
         const attendanceData = response.data?.attendance || response.data || response || [];
-        if (Array.isArray(attendanceData) && attendanceData.length > 0) {
-          const presentCount = attendanceData.filter(a => a.status === 'present').length;
-          attendanceRate = Math.round((presentCount / attendanceData.length) * 100);
+        if (Array.isArray(attendanceData)) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const tomorrow = new Date(today);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          
+          dailyAttendance = attendanceData.filter(attendance => {
+            const attendanceDate = new Date(attendance.date || attendance.createdAt);
+            return attendanceDate >= today && attendanceDate < tomorrow;
+          }).length;
         }
       }
 
-      setStats({ totalStudents, activeEvents, pendingAdmissions, totalRevenue, beltTests: 0, attendanceRate, certificates });
+      setStats({ totalStudents, totalEvents, dailyAdmissions, totalRevenue, beltTests: 0, dailyAttendance, certificates });
       setUpcomingEvents(upcomingEventsData);
 
       const activities = [];
       if (totalStudents > 0) activities.push({ icon: FaUsers, iconColor: 'text-blue-600', iconBg: 'bg-blue-100', title: 'Students enrolled', subtitle: `${totalStudents} total students in the system`, time: 'Current' });
-      if (activeEvents > 0) activities.push({ icon: FaCalendarAlt, iconColor: 'text-green-600', iconBg: 'bg-green-100', title: 'Active events', subtitle: `${activeEvents} upcoming events scheduled`, time: 'Current' });
-      if (pendingAdmissions > 0) activities.push({ icon: FaFileAlt, iconColor: 'text-orange-600', iconBg: 'bg-orange-100', title: 'Pending admissions', subtitle: `${pendingAdmissions} applications awaiting review`, time: 'Needs attention' });
+      if (totalEvents > 0) activities.push({ icon: FaCalendarAlt, iconColor: 'text-green-600', iconBg: 'bg-green-100', title: 'Total events', subtitle: `${totalEvents} events in the system`, time: 'Total' });
+      if (dailyAdmissions > 0) activities.push({ icon: FaFileAlt, iconColor: 'text-orange-600', iconBg: 'bg-orange-100', title: 'Daily admissions', subtitle: `${dailyAdmissions} applications today`, time: 'Today' });
       if (certificates > 0) activities.push({ icon: FaTrophy, iconColor: 'text-yellow-600', iconBg: 'bg-yellow-100', title: 'Certificates issued', subtitle: `${certificates} certificates in the system`, time: 'Total' });
-      if (attendanceRate > 0) activities.push({ icon: FaUserCheck, iconColor: 'text-teal-600', iconBg: 'bg-teal-100', title: 'Attendance tracked', subtitle: `${attendanceRate}% attendance rate`, time: 'Current' });
+      if (dailyAttendance > 0) activities.push({ icon: FaUserCheck, iconColor: 'text-teal-600', iconBg: 'bg-teal-100', title: 'Daily attendance', subtitle: `${dailyAttendance} attendance records today`, time: 'Today' });
       setRecentActivities(activities);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -104,14 +119,14 @@ function DashboardHome() {
 
   const mainStats = [
     { title: 'Total Students', value: stats.totalStudents.toString(), change: 'Enrolled students', icon: FaUsers, color: 'blue', link: '/admin/students' },
-    { title: 'Active Events', value: stats.activeEvents.toString(), change: 'Upcoming events', icon: FaCalendarAlt, color: 'green', link: '/admin/events' },
-    { title: 'Pending Admissions', value: stats.pendingAdmissions.toString(), change: 'Needs review', icon: FaFileAlt, color: 'orange', link: '/admin/admissions' },
+    { title: 'Total Events', value: stats.totalEvents.toString(), change: 'All events', icon: FaCalendarAlt, color: 'green', link: '/admin/events' },
+    { title: 'Daily Admissions', value: stats.dailyAdmissions.toString(), change: 'Today', icon: FaFileAlt, color: 'orange', link: '/admin/admissions' },
     { title: 'Monthly Revenue', value: `₹${stats.totalRevenue.toLocaleString()}`, change: 'This month', icon: FaMoneyBillWave, color: 'purple', link: '/admin/fees' }
   ];
 
   const secondaryStats = [
     { title: 'Belt Tests', value: stats.beltTests.toString(), subtitle: 'This Month', icon: FaGraduationCap, color: 'amber' },
-    { title: 'Attendance Rate', value: `${stats.attendanceRate}%`, subtitle: 'Overall', icon: FaUserCheck, color: 'teal' },
+    { title: 'Daily Attendance', value: stats.dailyAttendance.toString(), subtitle: 'Today', icon: FaUserCheck, color: 'teal' },
     { title: 'Certificates', value: stats.certificates.toString(), subtitle: 'Issued', icon: FaTrophy, color: 'yellow' }
   ];
 

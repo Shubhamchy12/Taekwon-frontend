@@ -9,21 +9,6 @@ function CourseManagement() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [courseImage, setCourseImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [stats, setStats] = useState({
-    total: 0,
-    active: 0,
-    totalEnrollment: 0,
-    monthlyRevenue: 0
-  });
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    itemsPerPage: 10
-  });
   const [authToken, setAuthToken] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [courseForm, setCourseForm] = useState({
@@ -32,8 +17,6 @@ function CourseManagement() {
     duration: '',
     schedule: '',
     price: '',
-    maxStudents: '',
-    instructor: '',
     category: '',
     description: '',
     features: ['']
@@ -114,8 +97,6 @@ function CourseManagement() {
       
       if (data.status === 'success') {
         setCourses(data.data.courses);
-        setStats(data.data.stats);
-        setPagination(data.data.pagination);
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -133,46 +114,34 @@ function CourseManagement() {
     }
 
     try {
-      console.log('📝 Creating course with data:', courseData);
       const response = await fetch(`${API_BASE_URL}/courses`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(courseData)
       });
 
-      console.log('📥 Response status:', response.status);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.log('❌ Error response:', errorData);
         if (response.status === 401) {
           localStorage.removeItem('authToken');
           setAuthToken(null);
           setShowLoginModal(true);
           throw new Error('Authentication required');
         }
-        
-        // Handle validation errors with specific messages
-        if (errorData.errors && Array.isArray(errorData.errors)) {
-          const errorMessages = errorData.errors.join(', ');
-          throw new Error(`Validation errors: ${errorMessages}`);
-        }
-        
         throw new Error(errorData.message || 'Failed to create course');
       }
 
       const data = await response.json();
       
       if (data.status === 'success') {
-        // Refresh the courses list
-        fetchCourses(pagination.currentPage, searchTerm, selectedCategory);
+        fetchCourses(1, searchTerm, selectedCategory);
         setShowAddModal(false);
         resetForm();
         alert('Course created successfully!');
       }
     } catch (error) {
       console.error('Error creating course:', error);
-      alert(`❌ Error creating course: ${error.message}`);
+      alert(`Error creating course: ${error.message}`);
     }
   };
 
@@ -191,202 +160,28 @@ function CourseManagement() {
       });
 
       if (!response.ok) {
+        const errorData = await response.json();
         if (response.status === 401) {
           localStorage.removeItem('authToken');
           setAuthToken(null);
           setShowLoginModal(true);
           throw new Error('Authentication required');
         }
-        throw new Error('Failed to update course');
+        throw new Error(errorData.message || 'Failed to update course');
       }
 
       const data = await response.json();
       
       if (data.status === 'success') {
-        // Refresh the courses list
-        fetchCourses(pagination.currentPage, searchTerm, selectedCategory);
+        fetchCourses(1, searchTerm, selectedCategory);
         setShowEditModal(false);
-        setSelectedCourse(null);
+        resetForm();
         alert('Course updated successfully!');
       }
     } catch (error) {
       console.error('Error updating course:', error);
-      alert('Error updating course. Please try again.');
+      alert(`Error updating course: ${error.message}`);
     }
-  };
-
-  // Delete course
-  const deleteCourseHandler = async (courseId) => {
-    console.log('🗑️ Delete handler called for course:', courseId);
-    
-    if (!authToken) {
-      alert('Please login first');
-      return;
-    }
-
-    if (!window.confirm('Are you sure you want to permanently delete this course? This action cannot be undone and will remove the course from the database forever.')) {
-      return;
-    }
-
-    try {
-      console.log('📤 Sending DELETE request to:', `${API_BASE_URL}/courses/${courseId}`);
-      const response = await fetch(`${API_BASE_URL}/courses/${courseId}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders()
-      });
-
-      console.log('📥 Response status:', response.status);
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('authToken');
-          setAuthToken(null);
-          setShowLoginModal(true);
-          throw new Error('Authentication required');
-        }
-        throw new Error(`Failed to delete course: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('✅ Delete response:', data);
-      
-      if (data.status === 'success') {
-        // Refresh the courses list
-        fetchCourses(pagination.currentPage, searchTerm, selectedCategory);
-        alert('Course permanently deleted from database!');
-      }
-    } catch (error) {
-      console.error('❌ Error deleting course:', error);
-      alert(`Error deleting course: ${error.message}`);
-    }
-  };
-
-  // Get course students
-  const getCourseStudents = async (courseId) => {
-    if (!authToken) {
-      alert('Please login first');
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/courses/${courseId}/students`, {
-        method: 'GET',
-        headers: getAuthHeaders()
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('authToken');
-          setAuthToken(null);
-          setShowLoginModal(true);
-          throw new Error('Authentication required');
-        }
-        throw new Error('Failed to fetch course students');
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'success') {
-        console.log('Course students:', data.data.students);
-        // You can show this data in a modal or navigate to a students page
-        alert(`This course has ${data.data.students.length} enrolled students`);
-      }
-    } catch (error) {
-      console.error('Error fetching course students:', error);
-      alert('Error fetching course students. Please try again.');
-    }
-  };
-
-  useEffect(() => {
-    fetchCourses(1, searchTerm, selectedCategory);
-  }, []);
-
-  useEffect(() => {
-    const delayedSearch = setTimeout(() => {
-      fetchCourses(1, searchTerm, selectedCategory);
-    }, 500);
-
-    return () => clearTimeout(delayedSearch);
-  }, [searchTerm, selectedCategory]);
-
-  const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.instructor?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.ageGroup?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === '' || course.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const getCategoryColor = (category) => {
-    const colors = {
-      'beginner': 'bg-blue-100 text-blue-800',
-      'intermediate': 'bg-purple-100 text-purple-800',
-      'advanced': 'bg-green-100 text-green-800'
-    };
-    return colors[category] || 'bg-gray-100 text-gray-800';
-  };
-
-  const handleEditCourse = (course) => {
-    setSelectedCourse(course);
-    setCourseForm({
-      title: course.title,
-      ageGroup: course.ageGroup,
-      duration: course.duration,
-      schedule: course.schedule,
-      price: course.price.toString(),
-      maxStudents: course.maxStudents.toString(),
-      instructor: course.instructor,
-      category: course.category,
-      description: course.description,
-      features: course.features || ['']
-    });
-    setShowEditModal(true);
-  };
-
-  const handleViewCourse = (course) => {
-    setSelectedCourse(course);
-    setShowViewModal(true);
-  };
-
-  const handleDeleteCourse = (courseId) => {
-    deleteCourseHandler(courseId);
-  };
-
-  const handleViewStudents = (courseId) => {
-    getCourseStudents(courseId);
-  };
-
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(file.type)) {
-        alert('Please select a valid image file (JPEG, PNG, or GIF)');
-        return;
-      }
-
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB');
-        return;
-      }
-
-      setCourseImage(file);
-      
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = () => {
-    setCourseImage(null);
-    setImagePreview(null);
-    setUploadProgress(0);
   };
 
   const resetForm = () => {
@@ -396,15 +191,10 @@ function CourseManagement() {
       duration: '',
       schedule: '',
       price: '',
-      maxStudents: '',
-      instructor: '',
       category: '',
       description: '',
       features: ['']
     });
-    setCourseImage(null);
-    setImagePreview(null);
-    setUploadProgress(0);
   };
 
   const handleFormChange = (field, value) => {
@@ -443,7 +233,6 @@ function CourseManagement() {
   const handleAddCourse = (e) => {
     e.preventDefault();
     
-    // Basic validation - only require essential fields
     if (!courseForm.title || !courseForm.category || !courseForm.description || !courseForm.price) {
       alert('Please fill in all required fields: Title, Category, Description, and Price');
       return;
@@ -451,34 +240,32 @@ function CourseManagement() {
 
     const courseData = {
       title: courseForm.title,
-      ageGroup: courseForm.ageGroup || "5-12 Years", // Default age group
-      duration: courseForm.duration || "45 Minutes", // Default duration
-      schedule: courseForm.schedule || "Mon, Wed, Fri - 6:00 PM", // Default schedule
+      ageGroup: courseForm.ageGroup || "5-12 Years",
+      duration: courseForm.duration || "45 Minutes",
+      schedule: courseForm.schedule || "Mon, Wed, Fri - 6:00 PM",
       price: courseForm.price,
-      maxStudents: courseForm.maxStudents || "20", // Default max students
-      instructor: courseForm.instructor || "TBA", // Default instructor
       category: courseForm.category,
       description: courseForm.description,
       features: courseForm.features.filter(feature => feature.trim() !== '')
     };
 
-    console.log('📋 Form data extracted:', courseData);
     createCourse(courseData);
   };
 
-  const handleEditCourseSubmit = (e) => {
+  const handleEditCourse = (e) => {
     e.preventDefault();
     
-    if (!selectedCourse) return;
+    if (!courseForm.title || !courseForm.category || !courseForm.description || !courseForm.price) {
+      alert('Please fill in all required fields: Title, Category, Description, and Price');
+      return;
+    }
 
     const courseData = {
       title: courseForm.title,
-      ageGroup: courseForm.ageGroup,
-      duration: courseForm.duration,
-      schedule: courseForm.schedule,
+      ageGroup: courseForm.ageGroup || "5-12 Years",
+      duration: courseForm.duration || "45 Minutes",
+      schedule: courseForm.schedule || "Mon, Wed, Fri - 6:00 PM",
       price: courseForm.price,
-      maxStudents: courseForm.maxStudents,
-      instructor: courseForm.instructor,
       category: courseForm.category,
       description: courseForm.description,
       features: courseForm.features.filter(feature => feature.trim() !== '')
@@ -486,6 +273,10 @@ function CourseManagement() {
 
     updateCourse(selectedCourse.id, courseData);
   };
+
+  useEffect(() => {
+    fetchCourses(1, searchTerm, selectedCategory);
+  }, []);
 
   if (loading) {
     return (
@@ -541,7 +332,7 @@ function CourseManagement() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Enrollment</p>
-              <p className="text-2xl font-bold text-gray-900">{courses.reduce((sum, c) => sum + c.currentStudents, 0)}</p>
+              <p className="text-2xl font-bold text-gray-900">{courses.reduce((sum, c) => sum + (c.currentStudents || 0), 0)}</p>
             </div>
           </div>
         </div>
@@ -555,7 +346,7 @@ function CourseManagement() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Monthly Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">₹{courses.reduce((sum, c) => sum + (c.currentStudents * c.price), 0).toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-900">₹{courses.reduce((sum, c) => sum + ((c.currentStudents || 0) * (c.price || 0)), 0).toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -568,7 +359,7 @@ function CourseManagement() {
             <div className="flex-1">
               <input
                 type="text"
-                placeholder="Search courses by name, instructor, or age group..."
+                placeholder="Search courses by name or age group..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -624,60 +415,78 @@ function CourseManagement() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredCourses.length === 0 ? (
+              {courses.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
                     No courses found matching your criteria
                   </td>
                 </tr>
               ) : (
-                filteredCourses.map((course) => {
-                  return (
-                    <tr key={course.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{course.title}</div>
-                          <div className="text-sm text-gray-500">Age: {course.ageGroup}</div>
-                          <div className="text-sm text-gray-500">Instructor: {course.instructor}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCategoryColor(course.category)}`}>
-                          {course.category.charAt(0).toUpperCase() + course.category.slice(1)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{course.schedule}</div>
-                        <div className="text-sm text-gray-500">{course.duration}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-bold text-red-600">₹{course.price}/month</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleViewCourse(course)}
-                            className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            View
-                          </button>
-                          <button
-                            onClick={() => handleEditCourse(course)}
-                            className="px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCourse(course.id)}
-                            className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
+                courses.map((course) => (
+                  <tr key={course.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{course.title}</div>
+                        <div className="text-sm text-gray-500">Age: {course.ageGroup}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                        {course.category}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{course.schedule}</div>
+                      <div className="text-sm text-gray-500">{course.duration}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-bold text-red-600">₹{course.price}/month</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => {
+                            setSelectedCourse(course);
+                            setShowViewModal(true);
+                          }}
+                          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          View
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setSelectedCourse(course);
+                            setCourseForm({
+                              title: course.title,
+                              ageGroup: course.ageGroup,
+                              duration: course.duration,
+                              schedule: course.schedule,
+                              price: course.price.toString(),
+                              category: course.category,
+                              description: course.description,
+                              features: course.features || ['']
+                            });
+                            setShowEditModal(true);
+                          }}
+                          className="px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => {
+                            if (window.confirm('Are you sure you want to delete this course?')) {
+                              // Delete functionality would go here
+                              alert('Delete functionality not implemented yet');
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -687,7 +496,7 @@ function CourseManagement() {
       {/* Add Course Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-10 mx-auto p-6 border w-full max-w-3xl shadow-lg rounded-lg bg-white">
+          <div className="relative top-10 mx-auto p-6 border w-full max-w-4xl shadow-lg rounded-lg bg-white">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-800">Add New Course</h2>
               <button 
@@ -702,213 +511,6 @@ function CourseManagement() {
             </div>
             
             <form onSubmit={handleAddCourse} className="space-y-4">
-              {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Course Title <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={courseForm.title}
-                    onChange={(e) => handleFormChange('title', e.target.value)}
-                    placeholder="e.g., Little Warriors"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Age Group
-                  </label>
-                  <input
-                    type="text"
-                    value={courseForm.ageGroup}
-                    onChange={(e) => handleFormChange('ageGroup', e.target.value)}
-                    placeholder="e.g., 4-7 Years, 18+ Years, Teen, Adult (Optional)"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Duration
-                  </label>
-                  <input
-                    type="text"
-                    value={courseForm.duration}
-                    onChange={(e) => handleFormChange('duration', e.target.value)}
-                    placeholder="e.g., 45 Minutes (Optional)"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={courseForm.category}
-                    onChange={(e) => handleFormChange('category', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">Select Category</option>
-                    <option value="beginner">Beginner Program</option>
-                    <option value="intermediate">Intermediate Program</option>
-                    <option value="advanced">Advanced Program</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Schedule
-                  </label>
-                  <input
-                    type="text"
-                    value={courseForm.schedule}
-                    onChange={(e) => handleFormChange('schedule', e.target.value)}
-                    placeholder="e.g., Mon, Wed, Fri - 4:00 PM (Optional)"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Price (₹/month) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    value={courseForm.price}
-                    onChange={(e) => handleFormChange('price', e.target.value)}
-                    placeholder="e.g., 2500"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Max Students
-                  </label>
-                  <input
-                    type="number"
-                    value={courseForm.maxStudents}
-                    onChange={(e) => handleFormChange('maxStudents', e.target.value)}
-                    placeholder="e.g., 15 (Optional, default: 20)"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-                  <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Instructor
-                  </label>
-                  <input
-                    type="text"
-                    value={courseForm.instructor}
-                    onChange={(e) => handleFormChange('instructor', e.target.value)}
-                    placeholder="e.g., Sabum Nim Ravi Kumar, Master Lee, TBA"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              {/* Course Description */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Course Description <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={courseForm.description}
-                  onChange={(e) => handleFormChange('description', e.target.value)}
-                  placeholder="Describe what students will learn in this course..."
-                  rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-                  required
-                />
-              </div>
-
-              {/* Course Features */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="block text-sm font-medium text-gray-700">
-                    What You'll Learn (Features)
-                  </label>
-                  <button
-                    type="button"
-                    onClick={addFeature}
-                    className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 transition-colors text-sm font-medium flex items-center space-x-1"
-                  >
-                    <span>+</span>
-                    <span>Add</span>
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {courseForm.features.map((feature, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={feature}
-                        onChange={(e) => handleFeatureChange(index, e.target.value)}
-                        placeholder={`Feature ${index + 1} - e.g., ${index === 0 ? 'Basic stances and movements' : index === 1 ? 'Simple self-defense techniques' : index === 2 ? 'Character development' : 'Additional feature'}`}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      />
-                      {courseForm.features.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeFeature(index)}
-                          className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors"
-                          title="Remove feature"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Form Actions */}
-              <div className="flex space-x-3 pt-4">
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setShowAddModal(false);
-                    resetForm();
-                  }}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-md font-medium hover:bg-gray-400 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  className="flex-1 bg-red-600 text-white py-2 rounded-md font-medium hover:bg-red-700 transition-colors"
-                >
-                  Add Course
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Course Modal */}
-      {showEditModal && selectedCourse && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-10 mx-auto p-6 border w-full max-w-3xl shadow-lg rounded-lg bg-white">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">Edit Course</h2>
-              <button 
-                onClick={() => {
-                  setShowEditModal(false);
-                  setSelectedCourse(null);
-                  resetForm();
-                }}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <form onSubmit={handleEditCourseSubmit} className="space-y-4">
-              {/* Basic Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -988,33 +590,8 @@ function CourseManagement() {
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Max Students
-                  </label>
-                  <input
-                    type="number"
-                    value={courseForm.maxStudents}
-                    onChange={(e) => handleFormChange('maxStudents', e.target.value)}
-                    placeholder="e.g., 15"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Instructor
-                  </label>
-                  <input
-                    type="text"
-                    value={courseForm.instructor}
-                    onChange={(e) => handleFormChange('instructor', e.target.value)}
-                    placeholder="e.g., Sabum Nim Ravi Kumar, Master Lee, TBA"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
               </div>
 
-              {/* Course Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Course Description <span className="text-red-500">*</span>
@@ -1029,7 +606,6 @@ function CourseManagement() {
                 />
               </div>
 
-              {/* Course Features */}
               <div>
                 <div className="flex justify-between items-center mb-3">
                   <label className="block text-sm font-medium text-gray-700">
@@ -1051,7 +627,7 @@ function CourseManagement() {
                         type="text"
                         value={feature}
                         onChange={(e) => handleFeatureChange(index, e.target.value)}
-                        placeholder={`Feature ${index + 1} - e.g., ${index === 0 ? 'Basic stances and movements' : index === 1 ? 'Simple self-defense techniques' : index === 2 ? 'Character development' : 'Additional feature'}`}
+                        placeholder={`Feature ${index + 1} - e.g., Basic stances and movements`}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                       />
                       {courseForm.features.length > 1 && (
@@ -1071,13 +647,11 @@ function CourseManagement() {
                 </div>
               </div>
 
-              {/* Form Actions */}
               <div className="flex space-x-3 pt-4">
                 <button 
                   type="button"
                   onClick={() => {
-                    setShowEditModal(false);
-                    setSelectedCourse(null);
+                    setShowAddModal(false);
                     resetForm();
                   }}
                   className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-md font-medium hover:bg-gray-400 transition-colors"
@@ -1088,7 +662,184 @@ function CourseManagement() {
                   type="submit"
                   className="flex-1 bg-red-600 text-white py-2 rounded-md font-medium hover:bg-red-700 transition-colors"
                 >
-                  Save Changes
+                  Add Course
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Course Modal */}
+      {showEditModal && selectedCourse && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-6 border w-full max-w-4xl shadow-lg rounded-lg bg-white">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Edit Course</h2>
+              <button 
+                onClick={() => {
+                  setShowEditModal(false);
+                  resetForm();
+                }}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleEditCourse} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Course Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={courseForm.title}
+                    onChange={(e) => handleFormChange('title', e.target.value)}
+                    placeholder="e.g., Little Warriors"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Age Group
+                  </label>
+                  <input
+                    type="text"
+                    value={courseForm.ageGroup}
+                    onChange={(e) => handleFormChange('ageGroup', e.target.value)}
+                    placeholder="e.g., 4-7 Years, 18+ Years, Teen, Adult"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Duration
+                  </label>
+                  <input
+                    type="text"
+                    value={courseForm.duration}
+                    onChange={(e) => handleFormChange('duration', e.target.value)}
+                    placeholder="e.g., 45 Minutes"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={courseForm.category}
+                    onChange={(e) => handleFormChange('category', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Select Category</option>
+                    <option value="beginner">Beginner Program</option>
+                    <option value="intermediate">Intermediate Program</option>
+                    <option value="advanced">Advanced Program</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Schedule
+                  </label>
+                  <input
+                    type="text"
+                    value={courseForm.schedule}
+                    onChange={(e) => handleFormChange('schedule', e.target.value)}
+                    placeholder="e.g., Mon, Wed, Fri - 4:00 PM"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Price (₹/month) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={courseForm.price}
+                    onChange={(e) => handleFormChange('price', e.target.value)}
+                    placeholder="e.g., 2500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Course Description <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={courseForm.description}
+                  onChange={(e) => handleFormChange('description', e.target.value)}
+                  placeholder="Describe what students will learn in this course..."
+                  rows="3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    What You'll Learn (Features)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addFeature}
+                    className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 transition-colors text-sm font-medium flex items-center space-x-1"
+                  >
+                    <span>+</span>
+                    <span>Add</span>
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {courseForm.features.map((feature, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={feature}
+                        onChange={(e) => handleFeatureChange(index, e.target.value)}
+                        placeholder={`Feature ${index + 1} - e.g., Basic stances and movements`}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      />
+                      {courseForm.features.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeFeature(index)}
+                          className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors"
+                          title="Remove feature"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    resetForm();
+                  }}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-md font-medium hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 bg-red-600 text-white py-2 rounded-md font-medium hover:bg-red-700 transition-colors"
+                >
+                  Update Course
                 </button>
               </div>
             </form>
@@ -1098,105 +849,87 @@ function CourseManagement() {
 
       {/* View Course Modal */}
       {showViewModal && selectedCourse && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Course Details</h3>
-                <button
-                  onClick={() => {
-                    setShowViewModal(false);
-                    setSelectedCourse(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Course Title</label>
-                    <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedCourse.title}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Category</label>
-                    <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-2 rounded capitalize">{selectedCourse.category}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Age Group</label>
-                    <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedCourse.ageGroup}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Duration</label>
-                    <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedCourse.duration}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Schedule</label>
-                    <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedCourse.schedule}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Price</label>
-                    <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-2 rounded">₹{selectedCourse.price}/month</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Instructor</label>
-                    <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedCourse.instructor}</p>
-                  </div>
-                </div>
-
+        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-6 border w-full max-w-3xl shadow-lg rounded-lg bg-white">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Course Details</h2>
+              <button 
+                onClick={() => setShowViewModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
-                  <div className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-lg border">
-                    {selectedCourse.description}
-                  </div>
-                </div>
-
-                {selectedCourse.features && selectedCourse.features.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">What You'll Learn</label>
-                    <div className="mt-1 bg-gray-50 p-3 rounded-lg border">
-                      <ul className="list-disc list-inside space-y-1">
-                        {selectedCourse.features.map((feature, index) => (
-                          <li key={index} className="text-sm text-gray-900">{feature}</li>
-                        ))}
-                      </ul>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">{selectedCourse.title}</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Age Group:</span>
+                      <span className="font-medium">{selectedCourse.ageGroup}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Duration:</span>
+                      <span className="font-medium">{selectedCourse.duration}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Schedule:</span>
+                      <span className="font-medium">{selectedCourse.schedule}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Category:</span>
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                        {selectedCourse.category}
+                      </span>
                     </div>
                   </div>
-                )}
-
-                <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    onClick={() => {
-                      setShowViewModal(false);
-                      setSelectedCourse(null);
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowViewModal(false);
-                      handleEditCourse(selectedCourse);
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    Edit Course
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowViewModal(false);
-                      handleDeleteCourse(selectedCourse.id);
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-                  >
-                    Delete Course
-                  </button>
                 </div>
+                
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Course Info</h4>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Price:</span>
+                      <span className="font-bold text-red-600">₹{selectedCourse.price}/month</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Current Students:</span>
+                      <span className="font-medium">{selectedCourse.currentStudents || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-3">Description</h4>
+                <p className="text-gray-700 leading-relaxed">{selectedCourse.description}</p>
+              </div>
+              
+              {selectedCourse.features && selectedCourse.features.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">What You'll Learn</h4>
+                  <ul className="space-y-2">
+                    {selectedCourse.features.map((feature, index) => (
+                      <li key={index} className="flex items-center text-gray-700">
+                        <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              <div className="flex justify-end pt-4">
+                <button 
+                  onClick={() => setShowViewModal(false)}
+                  className="px-6 py-2 bg-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-400 transition-colors"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>

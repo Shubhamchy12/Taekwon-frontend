@@ -1218,7 +1218,7 @@ function BeltManagement() {
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center">
                         <span className="text-sm font-semibold text-slate-600">
-                          {promotion.studentName.split(' ').map(n => n[0]).join('')}
+                          {promotion.studentName.split(' ').reduce((initials, name) => initials + name[0], '')}
                         </span>
                       </div>
                       <span className="font-medium text-slate-900">{promotion.studentName}</span>
@@ -1314,7 +1314,7 @@ function BeltManagement() {
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center">
                           <span className="text-sm font-semibold text-slate-600">
-                            {test.studentName.split(' ').map(n => n[0]).join('')}
+                            {test.studentName.split(' ').reduce((initials, name) => initials + name[0], '')}
                           </span>
                         </div>
                         <span className="font-medium text-slate-900">{test.studentName}</span>

@@ -111,7 +111,7 @@ function AdminLayout() {
             />
             <div>
               <h2 className="text-xl font-bold text-white">Admin Panel</h2>
-              <p className="text-slate-400 text-sm">Full System Control</p>
+              
             </div>
           </div>
         </div>

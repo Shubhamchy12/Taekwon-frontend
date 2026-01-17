@@ -59,9 +59,7 @@ function Courses() {
           features: course.features || [],
           color: getColorForIndex(index),
           category: course.category,
-          maxStudents: course.maxStudents,
           currentStudents: course.currentStudents,
-          instructor: course.instructor,
           status: course.status
         }));
         
@@ -235,17 +233,6 @@ function Courses() {
                           </div>
                           <span className="font-bold text-red-600">{program.price}</span>
                         </div>
-                        {program.currentStudents !== undefined && program.maxStudents && (
-                          <div className="flex justify-between items-center group/item hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200">
-                            <div className="flex items-center">
-                              <FaUsers className="text-amber-500 mr-2" />
-                              <span className="text-base text-gray-700">Enrollment:</span>
-                            </div>
-                            <span className="font-semibold text-black text-sm">
-                              {program.currentStudents}/{program.maxStudents}
-                            </span>
-                          </div>
-                        )}
                       </div>
                       
                       <div className="mb-6">
