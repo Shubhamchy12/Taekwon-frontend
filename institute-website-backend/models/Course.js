@@ -76,36 +76,10 @@ const courseSchema = new mongoose.Schema({
       max: 100
     }
   },
-  maxStudents: {
-    type: Number,
-    required: true,
-    min: 1
+  schedule: {
+    type: String,
+    default: 'Mon, Wed, Fri - 6:00 PM'
   },
-  currentEnrollment: {
-    type: Number,
-    default: 0
-  },
-  instructors: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  schedule: [{
-    day: {
-      type: String,
-      enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
-      required: true
-    },
-    startTime: {
-      type: String,
-      required: true,
-      match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please enter valid time format (HH:MM)']
-    },
-    endTime: {
-      type: String,
-      required: true,
-      match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please enter valid time format (HH:MM)']
-    }
-  }],
   isActive: {
     type: Boolean,
     default: true
@@ -118,16 +92,6 @@ const courseSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-});
-
-// Calculate availability
-courseSchema.virtual('availableSlots').get(function() {
-  return this.maxStudents - this.currentEnrollment;
-});
-
-// Check if course is full
-courseSchema.virtual('isFull').get(function() {
-  return this.currentEnrollment >= this.maxStudents;
 });
 
 // Update updatedAt before saving

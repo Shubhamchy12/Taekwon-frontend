@@ -40,7 +40,6 @@ const getCourses = async (req, res) => {
     
     // Get courses with pagination
     const courses = await Course.find(filter)
-      .populate('instructors', 'name email')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -68,11 +67,9 @@ const getCourses = async (req, res) => {
       title: course.name,
       ageGroup: `${course.ageGroup.min}-${course.ageGroup.max} Years`,
       duration: `${course.duration.sessionDuration} Minutes`,
-      schedule: course.schedule.map(s => `${s.day.charAt(0).toUpperCase() + s.day.slice(1)} ${s.startTime}-${s.endTime}`).join(', '),
+      schedule: course.schedule || 'Mon, Wed, Fri - 6:00 PM',
       price: course.fees.monthlyFee,
-      maxStudents: course.maxStudents,
       currentStudents: course.currentEnrollment,
-      instructor: course.instructors.length > 0 ? course.instructors[0].name : 'TBA',
       description: course.description,
       features: course.curriculum.map(c => c.topic),
       status: course.isActive ? 'active' : 'inactive',
@@ -108,8 +105,7 @@ const getCourses = async (req, res) => {
 // @access  Public
 const getCourse = async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id)
-      .populate('instructors', 'name email phone');
+    const course = await Course.findById(req.params.id);
 
     if (!course) {
       return res.status(404).json({
@@ -123,17 +119,13 @@ const getCourse = async (req, res) => {
       title: course.name,
       ageGroup: `${course.ageGroup.min}-${course.ageGroup.max} Years`,
       duration: `${course.duration.sessionDuration} Minutes`,
-      schedule: course.schedule.map(s => `${s.day.charAt(0).toUpperCase() + s.day.slice(1)} ${s.startTime}-${s.endTime}`).join(', '),
+      schedule: course.schedule || 'Mon, Wed, Fri - 6:00 PM',
       price: course.fees.monthlyFee,
-      maxStudents: course.maxStudents,
       currentStudents: course.currentEnrollment,
-      instructor: course.instructors.length > 0 ? course.instructors[0].name : 'TBA',
       description: course.description,
       features: course.curriculum.map(c => c.topic),
       status: course.isActive ? 'active' : 'inactive',
-      category: course.level,
-      availableSlots: course.availableSlots,
-      isFull: course.isFull
+      category: course.level
     };
 
     res.status(200).json({
@@ -161,8 +153,6 @@ const createCourse = async (req, res) => {
       duration,
       schedule,
       price,
-      maxStudents,
-      instructor,
       category,
       description,
       features
@@ -201,13 +191,8 @@ const createCourse = async (req, res) => {
         min: 5,
         max: 12
       },
-      maxStudents: parseInt(maxStudents) || 20,
       currentEnrollment: 0,
-      schedule: [{
-        day: 'monday',
-        startTime: '18:00',
-        endTime: '19:00'
-      }],
+      schedule: schedule || 'Mon, Wed, Fri - 6:00 PM',
       isActive: true
     };
 
@@ -252,8 +237,6 @@ const updateCourse = async (req, res) => {
       duration,
       schedule,
       price,
-      maxStudents,
-      instructor,
       category,
       description,
       features,
@@ -273,7 +256,7 @@ const updateCourse = async (req, res) => {
     if (category) course.level = category;
     if (description) course.description = description;
     if (price) course.fees.monthlyFee = parseInt(price);
-    if (maxStudents) course.maxStudents = parseInt(maxStudents);
+    if (schedule) course.schedule = schedule;
     if (status !== undefined) course.isActive = status === 'active';
 
     // Parse and update age group if provided

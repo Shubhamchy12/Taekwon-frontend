@@ -182,22 +182,18 @@ const updateBelt = async (req, res) => {
   }
 };
 
-// Delete belt level (soft delete)
+// Delete belt level (hard delete)
 const deleteBelt = async (req, res) => {
   try {
     console.log(`🗑️ Deleting belt level: ${req.params.id}`);
-    const belt = await Belt.findById(req.params.id);
+    const belt = await Belt.findByIdAndDelete(req.params.id);
+    
     if (!belt) {
       return res.status(404).json({
         status: 'error',
         message: 'Belt level not found'
       });
     }
-
-    // Soft delete - mark as inactive
-    belt.isActive = false;
-    belt.updatedBy = req.user?.id;
-    await belt.save();
 
     console.log(`✅ Deleted belt level: ${belt.name}`);
 
